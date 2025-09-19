@@ -8,8 +8,6 @@ MAKEFLAGS += --no-print-directory
 
 DOC_SLUG ?= "red_hat_openshift_data_foundation"
 DOC_VERSION ?= "4.19"
-VECTOR_DB ?= "vector_db"
-INDEX ?= "odf-${DOC_VERSION}"
 IMAGE_CMD ?= "podman"
 IMAGE_WITH_TAG ?= "odf-ols-byok:latest"
 
@@ -62,8 +60,8 @@ create-rag: ## Creates vector db based on cached downloads
 	@python3.11 scripts/html_embeddings/generate_embeddings.py \
 	--doc-url-version ${DOC_VERSION} \
 	--doc-url-slug ${DOC_SLUG} \
-	--output-dir ${VECTOR_DB} \
-	--index ${INDEX} \
+	--output-dir vector_db \
+	--index vector_db_index \
 	--skip-runbooks \
 	--use-cached-downloads \
 	--cache-dir odf/ \

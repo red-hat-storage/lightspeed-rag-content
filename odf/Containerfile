@@ -4,9 +4,6 @@ ARG BYOK_TOOL_IMAGE=registry.redhat.io/openshift-lightspeed-tech-preview/lightsp
 # Final image to which the created rag db will be copied
 ARG UBI_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
 
-# Name of the folder where the final rag db will be stored
-ARG VECTOR_DB=vector_db
-
 # STAGE 1: Take the downloaded html docs as input and run through stripping, chunking and embedding
 FROM ${BYOK_TOOL_IMAGE} as tool
 # we are expecting the downloaded html in this folder
@@ -19,9 +16,8 @@ COPY odf/Makefile odf/
 COPY odf/${DOC_SLUG} odf/
 # On a 8 core vCPU with AVX2 this command took 1hr45min
 RUN make -C odf create-rag
-COPY ${VECTOR_DB} ${VECTOR_DB}
+COPY vector_db vector_db
 
 # STAGE 2: Copy the embedded rag folder from STAGE 1
 FROM ${UBI_BASE_IMAGE}
-ARG VECTOR_DB
-COPY --from=tool /workdir/${VECTOR_DB} /rag/${VECTOR_DB}
+COPY --from=tool /workdir/vector_db /rag/vector_db
