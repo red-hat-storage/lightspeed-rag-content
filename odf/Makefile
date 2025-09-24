@@ -57,6 +57,17 @@ download-docs: ## Downloads ODF docs into 'odf' folder corresponding to the vers
 .PHONY: create-rag
 create-rag: ## Creates vector db based on cached downloads
 	@pushd ..
+
+	@if test -d odf/${DOC_SLUG}/${DOC_VERSION}/chunks; then
+		@find odf/${DOC_SLUG}/${DOC_VERSION}/chunks -type f -delete
+		@find odf/${DOC_SLUG}/${DOC_VERSION}/chunks -empty -type d -delete
+	fi
+
+	@if test -d odf/${DOC_SLUG}/${DOC_VERSION}/stripped; then
+		@find odf/${DOC_SLUG}/${DOC_VERSION}/stripped -type f -delete
+		@find odf/${DOC_SLUG}/${DOC_VERSION}/stripped -empty -type d -delete
+	fi
+
 	@python3.11 scripts/html_embeddings/generate_embeddings.py \
 	--doc-url-version ${DOC_VERSION} \
 	--doc-url-slug ${DOC_SLUG} \

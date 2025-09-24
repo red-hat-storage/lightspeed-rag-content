@@ -1,22 +1,19 @@
 # Base image which contains python environment for creating rag content
 ARG BYOK_TOOL_IMAGE=registry.redhat.io/openshift-lightspeed-tech-preview/lightspeed-rag-tool-rhel9:latest
-
-# Final image to which the created rag db will be copied
-ARG UBI_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
+# Second stage base image
+ARG UBI_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-micro@sha256:f45ee3d1f8ea8cd490298769daac2ac61da902e83715186145ac2e65322ddfc8
 
 # STAGE 1: Take the downloaded html docs as input and run through stripping, chunking and embedding
 FROM ${BYOK_TOOL_IMAGE} as tool
-# we are expecting the downloaded html in this folder
-ARG VECTOR_DB
 ARG DOC_SLUG=red_hat_openshift_data_foundation
 RUN dnf -y install make && dnf clean all
 WORKDIR /workdir
-COPY scripts/doc_downloader scripts/html_chunking scripts/html_embeddings scripts/
+COPY --parents scripts/doc_downloader scripts/html_chunking scripts/html_embeddings ./
 COPY odf/Makefile odf/
-COPY odf/${DOC_SLUG} odf/
+COPY --parents odf/${DOC_SLUG} ./
 # On a 8 core vCPU with AVX2 this command took 1hr45min
 RUN make -C odf create-rag
-COPY vector_db vector_db
+COPY --parents vector_db ./
 
 # STAGE 2: Copy the embedded rag folder from STAGE 1
 FROM ${UBI_BASE_IMAGE}
