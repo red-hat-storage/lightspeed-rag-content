@@ -2,5 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "prConcurrentLimit": 100,
   "branchConcurrentLimit": 0,
-  "prHourlyLimit": 100
+  "prHourlyLimit": 100,
+  "packageRules": [
+    {
+      "matchCategories": [
+        "python"
+      ],
+      "enabled": false
+    }
+  ]
 }
