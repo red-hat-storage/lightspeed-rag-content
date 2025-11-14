@@ -49,13 +49,22 @@ This release adds new features and enhancements related to the following compone
 
 ## Installation and update
 
+* You can now directly update OpenShift Virtualization to a later z-stream (x.y.z) release without applying each intermediate z-stream version.
+
+[NOTE]
+----
+Ensure that you update to the latest z-stream release of your current minor (x.y) version before updating to the next minor version.
+----
+
 * Installing OpenShift Virtualization on Oracle Cloud Infrastructure (OCI) is now generally available. For more information, see OpenShift Virtualization and Oracle Cloud Infrastructure known issues and limitations in the Red Hat Knowledgebase, and Installing OpenShift Virtualization on OCI on GitHub.
 
-## Infrastructure
-
-
+* Using OpenShift Virtualization on a bare-metal cluster installed on an ARM64 (AARCH64) system is now generally available. For more information, see ARM64 compatibility.
 
 ## Virtualization
+
+* The descheduler profile DevKubeVirtRelieveAndMigrate has been renamed to KubeVirtRelieveAndMigrate and is now generally available. The updated profile improves VM eviction stability during live migrations by enabling background evictions and reducing oscillatory behavior. For more information, see Configuring descheduler evictions for virtual machines.
+
+* vNUMA topology for VMs is now generally available (GA). By enabling this feature, you opt in to an improved NUMA configuration for VMs, with better performance and optimal resource allocation. For more information, see Working with NUMA topology for virtual machines.
 
 * You can now use the kube_application_aware_resourcequota and kube_application_aware_resourcequota_creation_timestamp metrics to query the current usage and creation times of the Application-Aware Quota (AAQ) Operator resources. For more information, see AAQ Operator metrics.
 
@@ -65,29 +74,43 @@ This release adds new features and enhancements related to the following compone
 
 * Managing the link state of a virtual machine interface is now generally available. In previous releases this was a Technology Preview feature.
 
-## Storage
-
-
+* You can now use the Border Gateway Protocol (BGP) to configure dynamic ingress and egress routing for VMs that are connected to primary user-defined networks. Importing routes from provider networks into OVN-Kubernetes eliminates the need to manually configure routes on hosts. With dynamic egress, you can export VM IP addresses to provider networks, making the VMs directly reachable from outside the cluster. For more information, see Advertise cluster network routes with Border Gateway Protocol.
 
 ## Web console
 
 * In the {product-title} web console, the Migrations tab of the Virtualization page now displays a progress bar for each migrating virtual machine.
 
 * When performing live migration of a VM, you can now specify the particular node for the VM to migrate to.
+* The procedure for hot plugging disks now includes an optional step for selecting a bus type. You can select the virtio-blk or the virtio-scsi bus type. The virtio-blk type is the default. For more information, see Hot plugging VM disks.
+* The InstanceTypes tab on the Create new VirtualMachine page now includes options for selecting huge pages. These options appear in the M and CX series of instance types. They are accessible both through the Select InstanceType tiles and in the Default InstanceType menu of the Add volume dialog box.
+
+For more information about selecting huge pages for an instance type, see "Creating a VM from an instance type by using the web console".
+
+* You can now easily identify if NUMA is enabled on your virtual machines. With this update, the vNUMA attribute is displayed in the VM details next to the CPU | Memory section.
 
 ## Monitoring
 
-Added documentation for the kubevirt_vmi_vcpu_delay_seconds_total Prometheus metric. This metric reports the time a virtual CPU (vCPU) was queued by the host scheduler but was not running. The updated documentation helps users better understand vCPU queue delays in OpenShift Virtualization environments.
+* Added documentation for the kubevirt_vmi_vcpu_delay_seconds_total Prometheus metric. This metric reports the time a virtual CPU (vCPU) was queued by the host scheduler but was not running. The updated documentation helps users better understand vCPU queue delays in OpenShift Virtualization environments.
 
-The guest agent ping probe is now generally available (GA). Previously, this feature was provided as a Technology Preview. It has been fully tested and is now supported for production use.
+* The following alerts for the OpenShift Virtualization Operator are now included in the OpenShift Virtualization runbooks:
+* HighNodeCPUFrequency
+* VirtualMachineStuckInUnhealthyState
+* VirtualMachineStuckOnNode
+* PersistentVolumeFillingUp
+* DeprecatedMachineType
+* HCOGoldenImageWithNoSupportedArchitecture
+* HCOGoldenImageWithNoArchitectureAnnotation
+* HCOMultiArchGoldenImagesDisabled
 
-## Documentation improvements
+For a complete list of virtualization metrics, see the openshift/runbooks Git repository.
 
+* Using the guest agent ping probe to determine if the QEMU guest agent is running on the VM is now generally available. Previously, this feature was provided as a Technology Preview.
 
+* Using Microsoft Azure Boost with OpenShift Virtualization on Azure Red Hat OpenShift (ARO) is now generally available.
 
 ## Notable technical changes
 
-
+* Before this update, only the virtio-scsi bus type could be used for hot plugging disks. With this update, the virtio-blk bus type is supported as well.
 
 # Deprecated and removed features
 
@@ -96,6 +119,7 @@ The guest agent ping probe is now generally available (GA). Previously, this fea
 Deprecated features are included in the current release and supported. However, they will be removed in a future release and are not recommended for new deployments.
 
 * The OperatorConditionsUnhealthy alert is deprecated. You can safely silence it.
+* All hot plugged disks are persistent by default. The use of non-persistent hot plugged disks is deprecated. They will not be supported in future releases.
 
 ## Removed features
 
@@ -109,9 +133,11 @@ Some features in this release are currently in Technology Preview. These experim
 
 Technology Preview Features Support Scope
 
-* OpenShift Virtualization is now supported on Azure Boost.
+* You can use OpenShift Virtualization on Microsoft Azure Boost.
 
-* The DevKubeVirtRelieveAndMigrate descheduler profile is now available. This profile enhances the LongLifecycle profile by supporting load-aware descheduling, dynamic soft taints, and improved workload rebalancing.
+* Golden image support for heterogeneous clusters is now available.
+
+* You can now use the Plug a Simple Socket Transport (passt) network binding plugin to connect a VM to a primary user-defined network (UDN). For more information, see Attaching a virtual machine to the primary user-defined network.
 
 # Bug fixes
 
@@ -124,8 +150,6 @@ Technology Preview Features Support Scope
 * On s390x systems, VMs created from a template with the Boot from CD option now boot correctly. CD-ROM devices are attached as SCSI instead of SATA, which is not supported on s390x architecture. (CNV-61740)
 
 # Known issues
-
-## Monitoring
 
 ## Networking
 
@@ -141,24 +165,19 @@ Technology Preview Features Support Scope
 
 ## Storage
 
+* Attempting a storage live migration from the {product-title} web console might hang and fail to create a destination PersistentVolumeClaim (PVC). This issue occurs because the web console does not detect a label that marks source PVCs previously used for migration. When this label is present, the migration cannot proceed successfully. (CNV-70866)
+* As a workaround, use the Migration Toolkit for Containers (MTC) web console or create the MigPlan resource manually by using the CLI to perform the migration.
+
 ## Virtualization
 
 * Live migration fails if the VM name exceeds 47 characters. (CNV-61066)
 
+* Live migration might fail if you are migrating a VM which has vNUMA enabled, and the topologyManagerPolicy setting in the KubeletConfig is configured with none. This is due to conflicting NUMA cells in the Topology Manager policy. (CNV-70330)
+* As a workaround, configure the topologyManagerPolicy setting in the KubeletConfig to use either the best-effort or single-numa-node policies.
+
 * OpenShift Virtualization links a service account token in use by a pod to that specific pod. OpenShift Virtualization implements a service account volume by creating a disk image that contains a token. If you migrate a VM, then the service account volume becomes invalid. (CNV-33835)
 * As a workaround, use user accounts rather than service accounts because user account tokens are not bound to a specific pod.
 
-## Web console
-
 ## IBM Z and IBM LinuxONE
 
-* GPU devices appear in the Hardware Devices list for s390x VMs, but GPU support is not available for s390x architecture. You can disregard these list entries. (CNV-61957)
-
-* When you create a VM by using Red Hat Enterprise Linux (RHEL) container disk images for s390x architecture, call traces referencing virtio_balloon free page reporting print to the VM console. This is due to a kernel bug. (OCPBUGS-51113)
-* As a workaround, disable memory ballooning for the VM by adding the following parameter to the VM YAML configuration: spec.domain.devices.autoattachMemBalloon: false.
-
-You can also disable free page reporting of memory ballooning for all new VMs. To do so, edit the HyperConverged CR and add the parameter spec.virtualMachineOptions.disableFreePageReporting: true.
-
 * VMs based on s390x architecture can only use the IPL boot mode. However, in the {product-title} web console, the Boot mode list for s390x VMs incorrectly includes BIOS, UEFI, and UEFI (secure) boot modes. If you select one of these modes for an s390x-based VM, the operation fails. (CNV-56889)
-
-* In the {product-title} web console, it is erroneously possible to define multiple CPU threads for a VM based on s390x architecture. If you define multiple CPU threads, the VM enters a CrashLoopBackOff state with the qemu-kvm: S390 does not support more than 1 threads error. (CNV-56890)
