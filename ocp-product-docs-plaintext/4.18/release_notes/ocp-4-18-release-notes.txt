@@ -275,6 +275,10 @@ The Insights Operator now gathers more data to detect the following scenarios, w
 
 The installation program now uses a newer version of the Cluster API Provider IBM Cloud provider that includes Transit Gateway fixes. Because of the cost of Transit Gateways in IBM Cloud, you can now use the Red Hat OpenShift Container Platform to create a Transit Gateway when creating an Red Hat OpenShift Container Platform cluster. For more information, see (OCPBUGS-37588) and (OCPBUGS-41938).
 
+### Installing a cluster on Microsoft Azure with virtual network encryption
+
+With this release, you can install a cluster on Azure using encrypted virtual networks. You are required to use Azure virtual machines that have the premiumIO parameter set to true, and that do not support NVMe storage. See Microsoft&#8217;s documentation about Creating a virtual network with encryption and Requirements and Limitations for more information.
+
 ### Configuring the ovn-kubernetes join subnet during cluster installation
 
 With this release, you can configure the IPv4 join subnet that is used internally by ovn-kubernetes when installing a cluster. You can set the internalJoinSubnet parameter in the install-config.yaml file and deploy the cluster into an existing Virtual Private Cloud (VPC).
@@ -844,6 +848,10 @@ If you have Operator projects that were previously created or maintained with Op
 
 Previously, the self-signed loopback certificate for the Kubernetes API Server expired after one year. With this release, the expiration date of the certificate is extended to three years.
 
+## VMware vSphere 7 and VMware Cloud Foundation 4 end of general support
+
+Broadcom has ended general support for VMware vSphere 7 and VMware Cloud Foundation (VCF) 4. If your existing Red Hat OpenShift Container Platform cluster is running on either of these platforms, you must plan to migrate or upgrade your VMware infrastructure to a supported version. Red Hat OpenShift Container Platform supports installation on vSphere 8 Update 1 or later, or VCF 5 or later.
+
 # Deprecated and removed features
 
 Some features available in previous releases have been deprecated or removed.
@@ -1390,6 +1398,68 @@ This section will continue to be updated over time to provide notes on enhanceme
 ----
 For any Red Hat OpenShift Container Platform release, always review the instructions on updating your cluster properly.
 ----
+
+## RHSA-2025:19047 - Red Hat OpenShift Container Platform 4.18.27 bug fix and security update
+
+Issued: 29 October 2025
+
+Red Hat OpenShift Container Platform release 4.18.27 is now available. The list of bug fixes that are included in the update is documented in the RHSA-2025:19047 advisory. The RPM packages that are included in the update are provided by the RHBA-2025:19045 advisory.
+
+Space precluded documenting all of the container images for this release in the advisory.
+
+You can view the container images in this release by running the following command:
+
+
+```terminal
+$ oc adm release info 4.18.27 --pullspecs
+```
+
+
+### Bug fixes
+
+* Before this update, if the OVN-Kubernetes controller was not processing updates from the Kubernetes API server and configuring the open virtual network (OVN) databases on each node, then the OVN-Controller, which consumed this database, might have connected to the database before the OVN-Kubernetes controller had configured them. As a consequence, the OVN-Controller synced with a stale OVN database, consumed source network address translations (SNATs) that were configured to support the egress IP, and proceeded to the gratuitous address resolution protocol (GARP) for the associated IP even though that IP might have moved to another node. With this release, these GARPs are blocked when the OVN-Kubernetes controller is not processing updates.  (OCPBUGS-62671)
+* Before this update, the Cluster Version Operator (CVO) in 4.19.9 and 4.18.23 started to require bearer token authentication in metrics requests. As a consequence, hosted control planes clusters were broken because the metrics scraper did not provide client authentication. With this release, the CVO does not require client authentication for metrics requests. As a result, access to CVO metrics scraping is recovered on hosted control planes clusters. (OCPBUGS-62869)
+* Before this update, the linked URL was in the developer perspective, but the perspective was not switched when you clicked the link. As a consequence, a blank page was shown. With this release, the perspective changes when you click the link and the page is correctly shown. (OCPBUGS-63041)
+* Before this update, users without a project saw only part of the Roles list because of insufficient role-based access control (RBAC) permissions. With this release, the access logic is fixed. As a result, these users cannot open the Roles page, which keeps sensitive data secure. (OCPBUGS-63247)
+* Before this update, during an update from 4.18.21 to 4.19.6, the Machine Config Operator (MCO) failed due to multiple labels in the capacity.cluster-autoscaler.kubernetes.io/labels annotation in one or more machine sets. With this release, the MCO accepts multiple labels in the capacity.cluster-autoscaler.kubernetes.io/labels annotation. As result, the MCO does not fail during the update to 4.19.6. (OCPBUGS-63346)
+
+### Updating
+
+To update an Red Hat OpenShift Container Platform 4.18 cluster to this latest release, see Updating a cluster using the CLI.
+
+## RHSA-2025:17657 - Red Hat OpenShift Container Platform 4.18.26 bug fix and security update
+
+Issued: 15 October 2025
+
+Red Hat OpenShift Container Platform release 4.18.26 is now available. The list of bug fixes that are included in the update is documented in the RHSA-2025:17657 advisory. The RPM packages that are included in the update are provided by the RHBA-2025:17655 advisory.
+
+Space precluded documenting all of the container images for this release in the advisory.
+
+You can view the container images in this release by running the following command:
+
+
+```terminal
+$ oc adm release info 4.18.26 --pullspecs
+```
+
+
+### Bug fixes
+
+* Before this update, scaling large numbers of nodes was slow because each machine was reconciled sequentially when the queue was large. With this release, up to 10 machines are reconciled concurrently, improving the speed of scale events. (OCPBUGS-59387)
+* Before this update, pods with secondary interfaces on an OVN-Kubernetes Localnet network could communicate with other pods on the same node only if their Localnet IP addresses were within the same subnet as the host network. With this release, Localnet IP addresses can be drawn from any subnet. In this case, an external router connects the Localnet subnet to the host network. (OCPBUGS-61455)
+* Before this update, stale IP addresses in the Address_Set for DNS Egress Firewall rules were not removed, causing memory leaks. With this release, IP addresses are removed from the Address_Set five seconds after their TTL expires, preventing memory growth. (OCPBUGS-61748)
+* Before this update, the MIRRORED_RELEASE_IMAGE environment variable for the ignition server could fluctuate due to race conditions, causing unnecessary pod restarts. With this release, the MIRRORED_RELEASE_IMAGE values are consistent, stabilizing ignition server deployments. (OCPBUGS-61904)
+* Before this update, control plane nodes created before Red Hat OpenShift Container Platform version 4.12 did not include the node-role.kubernetes.io/control-plane label. With this release, the Machine Config Operator (MCO) adds the label whenever it uncordons a control plane node. (OCPBUGS-62321)
+* Before this update, visiting the /auth/error page could display an improper error. With this release, the page renders a proper error message. (OCPBUGS-62326)
+* Before this update, omitting the --v1 or --v2 flags when using oc-mirror could lead to inconsistent behavior. With this release, specifying --v1 or --v2 is mandatory. (OCPBUGS-62432)
+* Before this update, resizing a PVC immediately after creation could fail because the PV was temporarily not found. With this release, you can resize PVCs immediately after creation without errors. (OCPBUGS-62467)
+* Before this update, the Machine Config Operator (MCO) did not search the /etc/docker/certs.d directory for required certificates, causing the Operator Controller and catalogd to fail. With this release, the MCO can access certificates in this directory, and the Operator Controller and catalogd now start successfully. (OCPBUGS-54175)
+* Before this update, an external actor could uncordon a node while the Machine Config Operator (MCO) was draining it, causing the MCO and scheduler to compete in scheduling and removing pods. With this release, the MCO detects external uncordons and continues the drain process without interference. (OCPBUGS-62637)
+* Before this update, you had to provide the oc-mirror version for every bug report, which could delay issue resolution. With this release, oc-mirror v2 outputs its version in both the standard output and log, making troubleshooting faster. (OCPBUGS-62696)
+
+### Updating
+
+To update an Red Hat OpenShift Container Platform 4.18 cluster to this latest release, see Updating a cluster using the CLI.
 
 ## RHBA-2025:16732 - Red Hat OpenShift Container Platform 4.18.25 bug fix update
 
