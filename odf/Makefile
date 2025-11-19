@@ -7,7 +7,7 @@ MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --no-print-directory
 
 DOC_SLUG ?= "red_hat_openshift_data_foundation"
-DOC_VERSION ?= "4.19"
+DOC_VERSION ?= "4.20"
 IMAGE_CMD ?= "podman"
 IMAGE_WITH_TAG ?= "odf-ols-byok:latest"
 
