@@ -1308,6 +1308,90 @@ This section will continue to be updated over time to provide notes on enhanceme
 For any Red Hat OpenShift Container Platform release, always review the instructions on updating your cluster properly.
 ----
 
+## RHBA-2026:23120 - Red Hat OpenShift Container Platform 4.17.46 bug fix advisory
+
+Issued: 06 January 2026
+
+Red Hat OpenShift Container Platform release 4.17.46 is now available. The list of bug fixes that are included in the update is documented in the RHBA-2026:23120 advisory. The RPM packages that are included in the update are provided by the RHBA-2025:23118 advisory.
+
+Space precluded documenting all of the container images for this release in the advisory.
+
+You can view the container images in this release by running the following command:
+
+
+```terminal
+$ oc adm release info 4.17.46--pullspecs
+```
+
+
+## Fixed issues
+
+The following issues are fixed with this release:
+
+* Before this update, when an IDMS or ICSP in the management cluster defined a source that pointed to registry.redhat.io or registry.redhat.io/redhat, and the mirror registry did not contain the required OLM catalog images, the provisioning of the HostedCluster object stalled due to unauthorized image pulls. As a consequence, the HostedCluster object was not deployed, and was blocked from pulling essential catalog images from the mirrored registry. With this release, the provisioning explicitly fails and blocks if a required image cannot be pulled due to authorization errors. In addition, the logic for registry overrides is improved to allow matches on the root of the registry, such as registry.redhat.io, for OLM CatalogSource image resolution. Also, a fallback mechanism is introduced to use the original image reference if the registry override does not yield a working image. As a result, the HostedCluster object is deployed, even in scenarios where the mirror registry lacks the required OLM catalog images, because the system correctly falls back to pull from the original source when appropriate. (OCPBUGS-57123).
+* Before this update, a bug on oc adm inspect --all-namespaces command construction meant that must-gather was not correctly gathering information about leases, csistoragecapacities, and the assisted-installer namespace. With this release, the issue is fixed and must-gather gathers the information correctly. (OCPBUGS-60607)
+* Before this update, when network interfaces were bonded, the bond interface presented itself using the MAC address of one of the interfaces that it used. The other interface in the bond also presented itself using that MAC address, but also retained its permanent MAC address. With this release, this permanent MAC address is reported and discovered by ironic-python-agent, so that if it is used as a boot MAC address, the ironic agent can look up the node that contains the MAC address. (OCPBUGS-62490)
+* Before this update, when you directly navigated to a page created by a web console dynamic plugin, the web console might have redirected you to a different URL. With this release, the URL redirect is removed. (OCPBUGS-65933)
+* Before this update, the Azure Machine API provider attempted to use the default platformUpdateDomainCount of 5 even in regions that are restricted to a single fault domain. This caused machine creation to fail for all node types in affected regions because Azure only supports one update domain when the fault domain count is 1. With this release, the logic was updated to explicitly set the platformUpdateDomainCount parameter to 1 whenever the platformFaultDomainCount parameter is determined to be 1. As a result, Machine Availability Sets are created with valid parameter combinations, which allows machines to successfully provision in Azure regions with a single fault domain. (OCPBUGS-65954)
+
+## Updating
+
+To update an Red Hat OpenShift Container Platform 4.17 cluster to this latest release, see Updating a cluster using the CLI.
+
+## RHBA-2025:22266 - Red Hat OpenShift Container Platform 4.17.45 bug fix advisory
+
+Issued: 3 December 2025
+
+Red Hat OpenShift Container Platform release 4.17.45 is now available. The list of bug fixes that are included in the update is documented in the RHBA-2025:22266 advisory. The RPM packages that are included in the update are provided by the RHBA-2025:22264 advisory.
+
+Space precluded documenting all of the container images for this release in the advisory.
+
+You can view the container images in this release by running the following command:
+
+
+```terminal
+$ oc adm release info 4.17.45--pullspecs
+```
+
+
+## Bug fixes
+
+The following bugs are fixed for this release:
+
+* Before this update, URLs passed to the AlertmanagerConfig receiver, specifically for Slack and Discord configurations, were not validated. With this release, URL validation is implemented, ensuring that only valid URLs are accepted and invalid ones are rejected. (OCPBUGS-58408)
+* Before this update, a Kube State Metrics (KSM) deny-list had typographical errors as demonstrated in the following example:
+
+```terminal
+--metric-denylist=
+          ^kube_secret_labels$,
+          ^kube_.+_annotations$
+          ^kube_customresource_.+_annotations_info$,
+          ^kube_customresource_.+_labels_info$,
+```
+
+
+With this release, a missing comma is now included as shown in the following example:
+
+```terminal
+--metric-denylist=
+          ^kube_secret_labels$,
+          ^kube_.+_annotations$,
+          ^kube_customresource_.+_annotations_info$,
+          ^kube_customresource_.+_labels_info$,
+```
+
+
+As a result, the entries are correctly separated. (OCPBUGS-64580)
+* Before this update, the must-gather pod could be scheduled on a node marked with a NotReady taint, resulting in deployment to an unavailable node and subsequent log collection failures. With this release, the scheduler now accounts for node taints and automatically applies a node selector to the pod specification. This change ensures that must-gather pods are not scheduled on tainted nodes, thereby preventing log collection failures. (OCPBUGS-64615)
+* Before this update, during failover, the system's duplicate address detection (DAD) could incorrectly disable the Egress IPv6 address if it was briefly present on both nodes, breaking the connection. With this release, the Egress IPv6 is configured to skip the DAD check during failover, guaranteeing uninterrupted egress IPv6 traffic after an Egress IP address successfully moves to a different node. As a result, greater network stability is ensured. (OCPBUGS-64674)
+* Before this update, the Observe -> Metric page used the cluster-wide metrics API even when you did not have cluster-wide metrics API permissions. As a consequence, the query input showed an error and the autocomplete for the query input did not work without cluster-wide metrics API access. With this release, the namespace-tenancy metrics API is used if you do not have cluster-wide metrics API permissions, As a result, an error does not occur and autocomplete is available for the metrics within the selected namespace. (OCPBUGS-64942)
+* Before this update, the ccoctl utility did not support pagination when retrieving CloudFront distributions. As a result, if the distribution to be deleted was not included in the first batch of results, the CloudFront distribution and its associated origin access identity could not be deleted successfully during the ccoctl Amazon Web Services (AWS) delete operation. With this release, pagination support is added to the ccoctl utility when fetching CloudFront distributions, ensuring that the distribution can be located and deleted properly. (OCPBUGS-65480)
+* Before this update, a regression in runc prevented pods which had the shareProcessNamespace object set to true from running properly. With this release, the regression has been corrected. As a result, the underlying issue is resolved, and pods using the shareProcessNamespace object can now start and function as expected. (OCPBUGS-65977)
+
+## Updating
+
+To update an Red Hat OpenShift Container Platform 4.17 cluster to this latest release, see Updating a cluster using the CLI.
+
 ## RHBA-2025:21225 - Red Hat OpenShift Container Platform 4.17.44 bug fix advisory
 
 Issued: 19 November 2025
@@ -1473,7 +1557,26 @@ $ oc adm release info 4.17.39 --pullspecs
 ```
 
 
-### Enhancement
+### Enhancements
+
+#### OLM support for tailored network policies in Operators
+
+In Red Hat OpenShift Container Platform 4.17.{olm-np-z-stream}, Operator Lifecycle Manage (OLM) allows Operators to include network policy manifests in their resource bundles. These tailored network policies protect against data leaks and harden against many attack vectors on Red Hat OpenShift Container Platform clusters.
+
+
+[TIP]
+----
+If your current version of OLM does not support tailored network policies, a
+notification is displayed in the following locations:
+* The Red Hat Hybrid Cloud Console
+* The web console of the affected cluster
+Update to Red Hat OpenShift Container Platform 4.17.{olm-np-z-stream} or later to
+enable OLM support for tailored network policies.
+----
+
+For more information, including the planned timeline for releasing Red&#160;Hat-provided Operators with tailored network policies, see Operators shipping with network policies may require OCP cluster upgrade before they can be upgraded (Red Hat Knowledgebase).
+
+(OCPBUGS-60525 and OCPBUGS-60521)
 
 #### Network port incorrectly open to outside networks closed
 
