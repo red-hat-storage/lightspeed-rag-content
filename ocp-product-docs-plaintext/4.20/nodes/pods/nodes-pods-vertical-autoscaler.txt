@@ -271,8 +271,6 @@ vpa-updater-default-db8b58df-2nkvf                  1/1     Running   0         
 ```
 
 
-* Creating infrastructure machine sets
-
 # About using the Vertical Pod Autoscaler Operator
 
 To use the Vertical Pod Autoscaler Operator (VPA), you create a VPA custom resource (CR) for a workload object in your cluster. The VPA learns and applies the optimal CPU and memory resources for the pods associated with that workload object. You can use a VPA with a deployment, stateful set, job, daemon set, replica set, or replication controller workload object. The VPA CR must be in the same project as the pods that you want to check.
@@ -1201,7 +1199,7 @@ After removing the VPA, it is recommended that you remove the other components a
 
 1. In the {product-title} web console, click Ecosystem -> Installed Operators.
 2. Switch to the openshift-vertical-pod-autoscaler project.
-3. For the VerticalPodAutoscaler  Operator, click the Options menu  and select Uninstall Operator.
+3. For the VerticalPodAutoscaler  Operator, click the Options menu . and select Uninstall Operator.
 4. Optional: To remove all operands associated with the Operator, in the dialog box, select Delete all operand instances for this operator checkbox.
 5. Click Uninstall.
 6. Optional: Use the OpenShift CLI to remove the VPA components:

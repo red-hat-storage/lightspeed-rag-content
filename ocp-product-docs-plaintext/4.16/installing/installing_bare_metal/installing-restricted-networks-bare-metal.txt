@@ -87,6 +87,12 @@ This section describes the requirements for deploying Red Hat OpenShift Containe
 The smallest Red Hat OpenShift Container Platform clusters require the following hosts:
 
 
+[IMPORTANT]
+----
+For a cluster that contains user-provisioned infrastructure, you must deploy all of the required machines.
+----
+
+
 
 
 [NOTE]
@@ -140,23 +146,24 @@ Because your cluster has limited access to automatic machine management when you
 
 ## Networking requirements for user-provisioned infrastructure
 
-All the Red Hat Enterprise Linux CoreOS (RHCOS) machines require networking to be configured in initramfs during boot
-to fetch their Ignition config files.
+You must configure networking for all the Red Hat Enterprise Linux CoreOS (RHCOS) machines in initramfs during boot, so that they can fetch their Ignition config files.
+
+
+[IMPORTANT]
+----
+Ensure you enable the disk.EnableUUID parameter on all virtual machines in your cluster.
+----
 
 During the initial boot, the machines require an IP address configuration that is set either through a DHCP server or statically by providing the required boot options. After a network connection is established, the machines download their Ignition config files from an HTTP or HTTPS server. The Ignition config files are then used to set the exact state of each machine. The Machine Config Operator completes more changes to the machines, such as the application of new certificates or keys, after installation.
 
 
 [NOTE]
 ----
-* It is recommended to use a DHCP server for long-term management of the cluster machines. Ensure that the DHCP server is configured to provide persistent IP addresses, DNS server information, and hostnames to the cluster machines.
+* Consider using a DHCP server for long-term management of the cluster machines. Ensure that the DHCP server is configured to provide persistent IP addresses, DNS server information, and hostnames to the cluster machines.
 * If a DHCP service is not available for your user-provisioned infrastructure, you can instead provide the IP networking configuration and the address of the DNS server to the nodes at RHCOS install time. These can be passed as boot arguments if you are installing from an ISO image. See the Installing RHCOS and starting the Red Hat OpenShift Container Platform bootstrap process section for more information about static IP provisioning and advanced networking options.
 ----
 
-The Kubernetes API server must be able to resolve the node names of the cluster
-machines. If the API servers and worker nodes are in different zones, you can
-configure a default DNS search zone to allow the API server to resolve the
-node names. Another supported approach is to always refer to hosts by their
-fully-qualified domain names in both the node objects and all DNS requests.
+The Kubernetes API server must be able to resolve the node names of the cluster machines. If the API servers and worker nodes are in different zones, you can configure a default DNS search zone to allow the API server to resolve the node names. Another supported approach is to always refer to hosts by their fully-qualified domain names in both the node objects and all DNS requests.
 
 ### Setting the cluster node hostnames through DHCP
 
@@ -166,9 +173,7 @@ Additionally, setting the hostnames through DHCP can bypass any manual DNS recor
 
 ### Network connectivity requirements
 
-You must configure the network connectivity between machines to allow Red Hat OpenShift Container Platform cluster
-components to communicate. Each machine must be able to resolve the hostnames
-of all other machines in the cluster.
+You must configure the network connectivity between machines to allow Red Hat OpenShift Container Platform cluster components to communicate. Each machine must be able to resolve the hostnames of all other machines in the cluster.
 
 This section provides details about the ports that are required.
 
@@ -1369,9 +1374,10 @@ You can add or change configuration settings in your Ignition configs before sav
 3. From the installation host, validate that the Ignition config files are available on the URLs. The following example gets the Ignition config file for the bootstrap node:
 
 ```terminal
-$ curl -k http://<HTTP_server>/bootstrap.ign 1
+$ curl -k http://<HTTP_server>/bootstrap.ign
 ```
 
+* <HTTP_server>: Replace bootstrap.ign with master.ign or worker.ign in the command to validate that the Ignition config files for the control plane and compute nodes are also available.
 Example output
 
 ```terminal
@@ -1380,8 +1386,6 @@ Example output
   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0{"ignition":{"version":"3.2.0"},"passwd":{"users":[{"name":"core","sshAuthorizedKeys":["ssh-rsa...
 ```
 
-
-Replace bootstrap.ign with master.ign or worker.ign in the command to validate that the Ignition config files for the control plane and compute nodes are also available.
 4. Although it is possible to obtain the RHCOS images that are required for your preferred method of installing operating system instances from the
 page, the recommended way to obtain the correct version of your RHCOS images are from the output of openshift-install command:
 
@@ -1417,6 +1421,14 @@ rhcos-<version>-live.<architecture>.iso
 It is possible to interrupt the RHCOS installation boot process to add kernel arguments. However, for this ISO procedure you should use the coreos-installer command as outlined in the following steps, instead of adding kernel arguments.
 ----
 7. Run the coreos-installer command and specify the options that meet your installation requirements. At a minimum, you must specify the URL that points to the Ignition config file for the node type, and the device that you are installing to:
+
+```terminal
+$ sudo coreos-installer install --ignition-url=http://<HTTP_server>/<node_type>.ign <device> \
+--ignition-hash=sha512-<digest>
+```
+
+* <device>: You must run the coreos-installer command by using sudo, because the core user does not have the required root privileges to perform the installation.
+* <digest>: The --ignition-hash option is required when the Ignition config file is obtained through an HTTP URL to validate the authenticity of the Ignition config file on the cluster node. <digest> is the Ignition config file SHA512 digest obtained in a preceding step.
 
 [NOTE]
 ----
@@ -1476,9 +1488,10 @@ installation, do not delete these files.
 2. From the installation host, validate that the Ignition config files are available on the URLs. The following example gets the Ignition config file for the bootstrap node:
 
 ```terminal
-$ curl -k http://<HTTP_server>/bootstrap.ign 1
+$ curl -k http://<HTTP_server>/bootstrap.ign
 ```
 
+* <HTTP_server>: Replace bootstrap.ign with master.ign or worker.ign in the command to validate that the Ignition config files for the control plane and compute nodes are also available.
 Example output
 
 ```terminal
@@ -1487,9 +1500,6 @@ Example output
   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0{"ignition":{"version":"3.2.0"},"passwd":{"users":[{"name":"core","sshAuthorizedKeys":["ssh-rsa...
 ```
 
-
-Replace bootstrap.ign with master.ign or worker.ign in the command to validate
-that the Ignition config files for the control plane and compute nodes are also available.
 3. Although it is possible to obtain the RHCOS kernel, initramfs and rootfs
 files that are required for your preferred method of installing operating system instances from the
 page, the recommended way to obtain the correct version of your RHCOS files are
@@ -1527,8 +1537,7 @@ for this procedure.
 RHCOS QCOW2 images are not supported for this installation type.
 ----
 
-The file names contain the Red Hat OpenShift Container Platform version number.
-They resemble the following examples:
+The file names contain the Red Hat OpenShift Container Platform version number. They resemble the following examples:
 * kernel: rhcos-<version>-live-kernel-<architecture>
 * initramfs: rhcos-<version>-live-initramfs.<architecture>.img
 * rootfs: rhcos-<version>-live-rootfs.<architecture>.img
@@ -1543,9 +1552,7 @@ installation, do not delete these files.
 5. Configure the network boot infrastructure so that the machines boot from their
 local disks after RHCOS is installed on them.
 6. Configure PXE or iPXE installation for the RHCOS images and begin the installation.
-
-Modify one of the following example menu entries for your environment and verify
-that the image and Ignition files are properly accessible:
+7. Modify one of the following example menu entries for your environment and verify that the image and Ignition files are properly accessible:
 * For PXE (x86_64):
 
 ```
@@ -1553,22 +1560,15 @@ DEFAULT pxeboot
 TIMEOUT 20
 PROMPT 0
 LABEL pxeboot
-    KERNEL http://<HTTP_server>/rhcos-<version>-live-kernel-<architecture> 1
-    APPEND initrd=http://<HTTP_server>/rhcos-<version>-live-initramfs.<architecture>.img coreos.live.rootfs_url=http://<HTTP_server>/rhcos-<version>-live-rootfs.<architecture>.img coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://<HTTP_server>/bootstrap.ign 2 3
+    KERNEL http://<HTTP_server>/rhcos-<version>-live-kernel-<architecture>
+    APPEND initrd=http://<HTTP_server>/rhcos-<version>-live-initramfs.<architecture>.img coreos.live.rootfs_url=http://<HTTP_server>/rhcos-<version>-live-rootfs.<architecture>.img coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://<HTTP_server>/bootstrap.ign
 ```
 
-Specify the location of the live kernel file that you uploaded to your HTTP
-server.
-The URL must be HTTP, TFTP, or FTP; HTTPS and NFS are not supported.
-If you use multiple NICs, specify a single interface in the ip option.
-For example, to use DHCP on a NIC that is named eno1, set ip=eno1:dhcp.
-Specify the locations of the RHCOS files that you uploaded to your
-HTTP server. The initrd parameter value is the location of the initramfs file,
-the coreos.live.rootfs_url parameter value is the location of the
-rootfs file, and the coreos.inst.ignition_url parameter value is the
-location of the bootstrap Ignition config file.
-You can also add more kernel arguments to the APPEND line to configure networking
-or other boot options.
+
+where:
+kernel:: Specify the location of the live kernel file that you uploaded to your HTTP
+server. The URL must be HTTP, TFTP, or FTP; HTTPS and NFS are not supported.
+initrd=main:: If you use multiple NICs, specify a single interface in the ip option. For example, to use DHCP on a NIC that is named eno1, set ip=eno1:dhcp. Specify the locations of the RHCOS files that you uploaded to your HTTP server. The initrd parameter value is the location of the initramfs file, the coreos.live.rootfs_url parameter value is the location of the rootfs file, and the coreos.inst.ignition_url parameter value is the location of the bootstrap Ignition config file. You can also add more kernel arguments to the APPEND line to configure networking or other boot options.
 
 [NOTE]
 ----
@@ -1579,20 +1579,14 @@ This configuration does not enable serial console access on machines with a grap
 ):
 
 ```
-kernel http://<HTTP_server>/rhcos-<version>-live-kernel-<architecture> initrd=main coreos.live.rootfs_url=http://<HTTP_server>/rhcos-<version>-live-rootfs.<architecture>.img coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://<HTTP_server>/bootstrap.ign 1 2
-initrd --name main http://<HTTP_server>/rhcos-<version>-live-initramfs.<architecture>.img 3
+kernel http://<HTTP_server>/rhcos-<version>-live-kernel-<architecture> initrd=main coreos.live.rootfs_url=http://<HTTP_server>/rhcos-<version>-live-rootfs.<architecture>.img coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://<HTTP_server>/bootstrap.ign
+initrd --name main http://<HTTP_server>/rhcos-<version>-live-initramfs.<architecture>.img
 boot
 ```
 
-Specify the locations of the RHCOS files that you uploaded to your
-HTTP server. The kernel parameter value is the location of the kernel file,
-the initrd=main argument is needed for booting on UEFI systems,
-the coreos.live.rootfs_url parameter value is the location of the rootfs file,
-and the coreos.inst.ignition_url parameter value is the
-location of the bootstrap Ignition config file.
-If you use multiple NICs, specify a single interface in the ip option.
+kernel:: Specify the locations of the RHCOS files that you uploaded to your HTTP server. The kernel parameter value is the location of the kernel file, the initrd=main argument is needed for booting on UEFI systems, the coreos.live.rootfs_url parameter value is the location of the rootfs file, and the coreos.inst.ignition_url parameter value is the location of the bootstrap Ignition config file. If you use multiple NICs, specify a single interface in the ip option.
 For example, to use DHCP on a NIC that is named eno1, set ip=eno1:dhcp.
-Specify the location of the initramfs file that you uploaded to your HTTP server.
+initrd:: Specify the location of the initramfs file that you uploaded to your HTTP server.
 
 [NOTE]
 ----
@@ -1607,25 +1601,25 @@ To network boot the CoreOS kernel on aarch64 architecture, you need to use a ver
 
 ```
 menuentry 'Install CoreOS' {
-    linux rhcos-<version>-live-kernel-<architecture>  coreos.live.rootfs_url=http://<HTTP_server>/rhcos-<version>-live-rootfs.<architecture>.img coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://<HTTP_server>/bootstrap.ign 1 2
-    initrd rhcos-<version>-live-initramfs.<architecture>.img 3
+    linux rhcos-<version>-live-kernel-<architecture>  coreos.live.rootfs_url=http://<HTTP_server>/rhcos-<version>-live-rootfs.<architecture>.img coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url=http://<HTTP_server>/bootstrap.ign
+    initrd rhcos-<version>-live-initramfs.<architecture>.img
 }
 ```
 
-Specify the locations of the RHCOS files that you uploaded to your
-HTTP/TFTP server. The kernel parameter value is the location of the kernel file on your TFTP server.
-The coreos.live.rootfs_url parameter value is the location of the rootfs file, and the coreos.inst.ignition_url parameter value is the location of the bootstrap Ignition config file on your HTTP Server.
-If you use multiple NICs, specify a single interface in the ip option.
+
+where:
+coreos.live.rootfs_url:: Specify the locations of the RHCOS files that you uploaded to your HTTP/TFTP server.
+kernel:: The kernel parameter value is the location of the kernel file on your TFTP server. The coreos.live.rootfs_url parameter value is the location of the rootfs file, and the coreos.inst.ignition_url parameter value is the location of the bootstrap Ignition config file on your HTTP Server. If you use multiple NICs, specify a single interface in the ip option.
 For example, to use DHCP on a NIC that is named eno1, set ip=eno1:dhcp.
-Specify the location of the initramfs file that you uploaded to your TFTP server.
-7. Monitor the progress of the RHCOS installation on the console of the machine.
+initrd rhcos:: Specify the location of the initramfs file that you uploaded to your TFTP server.
+8. Monitor the progress of the RHCOS installation on the console of the machine.
 
 [IMPORTANT]
 ----
 Be sure that the installation is successful on each node before commencing with the Red Hat OpenShift Container Platform installation. Observing the installation process can also help to determine the cause of RHCOS installation issues that might arise.
 ----
-8. After RHCOS installs, the system reboots. During reboot, the system applies the Ignition config file that you specified.
-9. Check the console output to verify that Ignition ran.
+9. After RHCOS installs, the system reboots. During reboot, the system applies the Ignition config file that you specified.
+10. Check the console output to verify that Ignition ran.
 Example command
 
 ```terminal
@@ -1633,7 +1627,7 @@ Ignition: ran on 2022/03/14 14:48:33 UTC (this boot)
 Ignition: user-provided config was applied
 ```
 
-10. Continue to create the machines for your cluster.
+11. Continue to create the machines for your cluster.
 
 [IMPORTANT]
 ----
@@ -1651,269 +1645,13 @@ RHCOS nodes do not include a default password for the  core user. You can access
 
 ## Advanced RHCOS installation configuration
 
-A key benefit for manually provisioning the Red Hat Enterprise Linux CoreOS (RHCOS)
-nodes for Red Hat OpenShift Container Platform is to be able to do configuration that is not
-available through default Red Hat OpenShift Container Platform installation methods.
-This section describes some of the configurations that you can do using
-techniques that include:
+A key benefit for manually provisioning the Red Hat Enterprise Linux CoreOS (RHCOS) nodes for Red Hat OpenShift Container Platform is to be able to do configuration that is not available through default Red Hat OpenShift Container Platform installation methods. This section describes some of the configurations that you can do using techniques that include:
 
 * Passing kernel arguments to the live installer
 * Running coreos-installer manually from the live system
 * Customizing a live ISO or PXE boot image
 
-The advanced configuration topics for manual Red Hat Enterprise Linux CoreOS (RHCOS)
-installations detailed in this section relate to disk partitioning, networking, and using Ignition configs in different ways.
-
-### Using advanced networking options for PXE and ISO installations
-
-Networking for Red Hat OpenShift Container Platform nodes uses DHCP by default to gather all
-necessary configuration settings. To set up static IP addresses or configure special settings, such as bonding, you can do one of the following:
-
-* Pass special kernel parameters when you boot the live installer.
-* Use a machine config to copy networking files to the installed system.
-* Configure networking from a live installer shell prompt, then copy those settings to the installed system so that they take effect when the installed system first boots.
-
-To configure a PXE or iPXE installation, use one of the following options:
-
-* See the "Advanced RHCOS installation reference" tables.
-* Use a machine config to copy networking files to the installed system.
-
-To configure an ISO installation, use the following procedure.
-
-1. Boot the ISO installer.
-2. From the live system shell prompt, configure networking for the live system using available RHEL tools, such as nmcli or nmtui.
-3. Run the coreos-installer command to install the system, adding the --copy-network option to copy networking configuration. For example:
-
-```terminal
-$ sudo coreos-installer install --copy-network \
-     --ignition-url=http://host/worker.ign /dev/disk/by-id/scsi-<serial_number>
-```
-
-
-[IMPORTANT]
-----
-The --copy-network option only copies networking configuration found under /etc/NetworkManager/system-connections. In particular, it does not copy the system hostname.
-----
-4. Reboot into the installed system.
-
-* See Getting started with nmcli and Getting started with nmtui in the RHEL 8 documentation for more information about the nmcli and nmtui tools.
-
-### Disk partitioning
-
-Disk partitions are created on Red Hat OpenShift Container Platform cluster nodes during the Red Hat Enterprise Linux CoreOS (RHCOS) installation. Each RHCOS node of a particular architecture uses the same partition layout, unless you override the default partitioning configuration. During the RHCOS installation, the size of the root file system is increased to use any remaining available space on the target device.
-
-
-[IMPORTANT]
-----
-The use of a custom partition scheme on your node might result in Red Hat OpenShift Container Platform not monitoring or alerting on some node partitions. If you override the default partitioning, see Understanding OpenShift File System Monitoring (eviction conditions) for more information about how Red Hat OpenShift Container Platform monitors your host file systems.
-----
-
-Red Hat OpenShift Container Platform monitors the following two filesystem identifiers:
-
-* nodefs, which is the filesystem that contains /var/lib/kubelet
-* imagefs, which is the filesystem that contains /var/lib/containers
-
-For the default partition scheme, nodefs and imagefs monitor the same root filesystem, /.
-
-To override the default partitioning when installing RHCOS on an Red Hat OpenShift Container Platform cluster node, you must create separate partitions. Consider a situation where you want to add a separate storage partition for your containers and container images. For example, by mounting /var/lib/containers in a separate partition, the kubelet separately monitors /var/lib/containers as the imagefs directory and the root file system as the nodefs directory.
-
-
-[IMPORTANT]
-----
-If you have resized your disk size to host a larger file system, consider creating a separate /var/lib/containers partition. Consider resizing a disk that has an xfs format to reduce CPU time issues caused by a high number of allocation groups.
-----
-
-#### Creating a separate /var partition
-
-In general, you should use the default disk partitioning that is created during the RHCOS installation. However, there are cases where you might want to create a separate partition for a directory that you expect to grow.
-
-Red Hat OpenShift Container Platform supports the addition of a single partition to attach
-storage to either the /var directory or a subdirectory of /var.
-For example:
-
-* /var/lib/containers: Holds container-related content that can grow
-as more images and containers are added to a system.
-* /var/lib/etcd: Holds data that you might want to keep separate for purposes such as performance optimization of etcd storage.
-* /var: Holds data that you might want to keep separate for purposes such as auditing.
-
-[IMPORTANT]
-----
-For disk sizes larger than 100GB, and especially larger than 1TB, create a separate /var partition.
-----
-
-Storing the contents of a /var directory separately makes it easier to grow storage for those areas as needed and reinstall Red Hat OpenShift Container Platform at a later date and keep that data intact. With this method, you will not have to pull all your containers again, nor will you have to copy massive log files when you update systems.
-
-The use of a separate partition for the /var directory or a subdirectory of /var also prevents data growth in the partitioned directory from filling up the root file system.
-
-The following procedure sets up a separate /var partition by adding a machine config manifest that is wrapped into the Ignition config file for a node type during the preparation phase of an installation.
-
-1. On your installation host, change to the directory that contains the Red Hat OpenShift Container Platform installation program and generate the Kubernetes manifests for the cluster:
-
-```terminal
-$ openshift-install create manifests --dir <installation_directory>
-```
-
-2. Create a Butane config that configures the additional partition. For example, name the file $HOME/clusterconfig/98-var-partition.bu, change the disk device name to the name of the storage device on the worker systems, and set the storage size as appropriate. This example places the /var directory on a separate partition:
-
-```yaml
-variant: openshift
-version: 4.16.0
-metadata:
-  labels:
-    machineconfiguration.openshift.io/role: worker
-  name: 98-var-partition
-storage:
-  disks:
-  - device: /dev/disk/by-id/<device_name> 1
-    partitions:
-    - label: var
-      start_mib: <partition_start_offset> 2
-      size_mib: <partition_size> 3
-      number: 5
-  filesystems:
-    - device: /dev/disk/by-partlabel/var
-      path: /var
-      format: xfs
-      mount_options: [defaults, prjquota] 4
-      with_mount_unit: true
-```
-
-The storage device name of the disk that you want to partition.
-When adding a data partition to the boot disk, a minimum offset value of 25000 mebibytes is recommended. The root file system is automatically resized to fill all available space up to the specified offset. If no offset value is specified, or if the specified value is smaller than the recommended minimum, the resulting root file system will be too small, and future reinstalls of RHCOS might overwrite the beginning of the data partition.
-The size of the data partition in mebibytes.
-The prjquota mount option must be enabled for filesystems used for container storage.
-
-[NOTE]
-----
-When creating a separate /var partition, you cannot use different instance types for compute nodes, if the different instance types do not have the same device name.
-----
-3. Create a manifest from the Butane config and save it to the clusterconfig/openshift directory. For example, run the following command:
-
-```terminal
-$ butane $HOME/clusterconfig/98-var-partition.bu -o $HOME/clusterconfig/openshift/98-var-partition.yaml
-```
-
-4. Create the Ignition config files:
-
-```terminal
-$ openshift-install create ignition-configs --dir <installation_directory> 1
-```
-
-For <installation_directory>, specify the same installation directory.
-
-Ignition config files are created for the bootstrap, control plane, and compute nodes in the installation directory:
-
-```
-.
-├── auth
-│   ├── kubeadmin-password
-│   └── kubeconfig
-├── bootstrap.ign
-├── master.ign
-├── metadata.json
-└── worker.ign
-```
-
-
-The files in the <installation_directory>/manifest and <installation_directory>/openshift directories are wrapped into the Ignition config files, including the file that contains the 98-var-partition custom MachineConfig object.
-
-* You can apply the custom disk partitioning by referencing the Ignition config files during the RHCOS installations.
-
-#### Retaining existing partitions
-
-For an ISO installation, you can add options to the coreos-installer command
-that cause the installer to maintain one or more existing partitions.
-For a PXE installation, you can add coreos.inst.* options to the APPEND parameter to preserve partitions.
-
-Saved partitions might be data partitions from an existing Red Hat OpenShift Container Platform system. You can identify the disk partitions you want to keep either by partition label or by number.
-
-
-[NOTE]
-----
-If you save existing partitions, and those partitions do not leave enough space for RHCOS, the installation will fail without damaging the saved partitions.
-----
-
-This example preserves any partition in which the partition label begins with data (data*):
-
-
-```terminal
-# coreos-installer install --ignition-url http://10.0.2.2:8080/user.ign \
-        --save-partlabel 'data*' /dev/disk/by-id/scsi-<serial_number>
-```
-
-
-The following example illustrates running the coreos-installer in a way that preserves
-the sixth (6) partition on the disk:
-
-
-```terminal
-# coreos-installer install --ignition-url http://10.0.2.2:8080/user.ign \
-        --save-partindex 6 /dev/disk/by-id/scsi-<serial_number>
-```
-
-
-This example preserves partitions 5 and higher:
-
-
-```terminal
-# coreos-installer install --ignition-url http://10.0.2.2:8080/user.ign
-        --save-partindex 5- /dev/disk/by-id/scsi-<serial_number>
-```
-
-
-In the previous examples where partition saving is used, coreos-installer recreates the partition immediately.
-
-This APPEND option preserves any partition in which the partition label begins with 'data' ('data*'):
-
-
-```terminal
-coreos.inst.save_partlabel=data*
-```
-
-
-This APPEND option preserves partitions 5 and higher:
-
-
-```terminal
-coreos.inst.save_partindex=5-
-```
-
-
-This APPEND option preserves partition 6:
-
-
-```terminal
-coreos.inst.save_partindex=6
-```
-
-
-### Identifying Ignition configs
-
-When doing an RHCOS manual installation, there are two types of Ignition configs that you can provide, with different reasons for providing each one:
-
-* Permanent install Ignition config: Every manual RHCOS installation
-needs to pass one of the Ignition config files generated by openshift-installer,
-such as bootstrap.ign, master.ign and worker.ign, to carry out the
-installation.
-
-
-[IMPORTANT]
-----
-It is not recommended to modify these Ignition config files directly. You can update the manifest files that are wrapped into the Ignition config files, as outlined in examples in the preceding sections.
-----
-
-For PXE installations, you pass the Ignition configs on the APPEND line using the
-coreos.inst.ignition_url= option. For ISO installations, after the ISO boots to
-the shell prompt, you identify the Ignition config on the coreos-installer
-command line with the --ignition-url= option. In both cases, only HTTP and HTTPS
-protocols are supported.
-
-* Live install Ignition config: This type can be created by using the coreos-installer customize subcommand and its various options. With this method, the Ignition config passes to the live install medium, runs immediately upon booting, and performs setup tasks before or after the RHCOS system installs to disk. This method should only be used for performing tasks that must be done once and not applied again later, such as with advanced partitioning that cannot be done using a machine config.
-
-For PXE or ISO boots, you can create the Ignition config
-and APPEND the ignition.config.url= option to identify the location of
-the Ignition config. You also need to append ignition.firstboot ignition.platform.id=metal
-or the ignition.config.url option will be ignored.
+The advanced configuration topics for manual Red Hat Enterprise Linux CoreOS (RHCOS) installations detailed in this section relate to disk partitioning, networking, and using Ignition configs in different ways.
 
 ### Default console configuration
 
@@ -1947,13 +1685,15 @@ By default, the Red Hat Enterprise Linux CoreOS (RHCOS) serial console is disabl
 
 ```terminal
 $ coreos-installer install \
-  --console=tty0 \1
-  --console=ttyS0,<options> \2
+  --console=tty0 \
+  --console=ttyS0,<options> \
   --ignition-url=http://host/worker.ign /dev/disk/by-id/scsi-<serial_number>
 ```
 
-The desired secondary console. In this case, the graphical console. Omitting this option will disable the graphical console.
-The desired primary console. In this case the serial console. The options field defines the baud rate and other settings. A common value for this field is 115200n8. If no options are provided, the default kernel value of 9600n8 is used. For more information on the format of this option, see Linux kernel serial console documentation.
+
+where:
+--console=tty0:: The desired secondary console. In this case, the graphical console. Omitting this option will disable the graphical console.
+--console=ttyS0:: The desired primary console. In this case the serial console. The options field defines the baud rate and other settings. A common value for this field is 115200n8. If no options are provided, the default kernel value of 9600n8 is used. For more information on the format of this option, see Linux kernel serial console documentation.
 3. Reboot into the installed system.
 
 [NOTE]
@@ -1988,12 +1728,14 @@ You can use this feature to configure the {boot-media} to automatically install 
 
 ```terminal
 $ coreos-installer iso customize rhcos-<version>-live.x86_64.iso \
-    --dest-ignition bootstrap.ign \ 1
-    --dest-device /dev/disk/by-id/scsi-<serial_number> 2
+    --dest-ignition bootstrap.ign \
+    --dest-device /dev/disk/by-id/scsi-<serial_number>
 ```
 
-The Ignition config file that is generated from the openshift-installer installation program.
-When you specify this option, the {boot-media} automatically runs an installation. Otherwise, the image remains configured for installation, but does not install automatically unless you specify the coreos.inst.install_dev kernel argument.
+
+where:
+--dest-ignition:: The Ignition config file that is generated from the openshift-installer installation program.
+--dest-device:: When you specify this option, the {boot-media} automatically runs an installation. Otherwise, the image remains configured for installation, but does not install automatically unless you specify the coreos.inst.install_dev kernel argument.
 3. Optional: To remove the {boot-media} customizations and return the image to its pristine state, run:
 
 ```terminal
@@ -2014,16 +1756,18 @@ On clusters installed with Red Hat OpenShift Container Platform 4.12 and above, 
 
 ```terminal
 $ coreos-installer iso customize rhcos-<version>-live.x86_64.iso \
-  --dest-ignition <path> \1
-  --dest-console tty0 \2
-  --dest-console ttyS0,<options> \3
-  --dest-device /dev/disk/by-id/scsi-<serial_number> 4
+  --dest-ignition <path> \//
+  --dest-console tty0 \//
+  --dest-console ttyS0,<options> \//
+  --dest-device /dev/disk/by-id/scsi-<serial_number>
 ```
 
-The location of the Ignition config to install.
-The desired secondary console. In this case, the graphical console. Omitting this option will disable the graphical console.
-The desired primary console. In this case, the serial console. The options field defines the baud rate and other settings. A common value for this field is 115200n8. If no options are provided, the default kernel value of 9600n8 is used. For more information on the format of this option, see the Linux kernel serial console documentation.
-The specified disk to install to. If you omit this option, the {boot-media} automatically runs the installation program which will fail unless you also specify the coreos.inst.install_dev kernel argument.
+
+where:
+<path>:: The location of the Ignition config to install.
+tty0:: The desired secondary console. In this case, the graphical console. Omitting this option will disable the graphical console.
+<options>:: The desired primary console. In this case, the serial console. The options field defines the baud rate and other settings. A common value for this field is 115200n8. If no options are provided, the default kernel value of 9600n8 is used. For more information on the format of this option, see the Linux kernel serial console documentation.
+<serial_number>:: The specified disk to install to. If you omit this option, the {boot-media} automatically runs the installation program which will fail unless you also specify the coreos.inst.install_dev kernel argument.
 
 [NOTE]
 ----
@@ -2056,7 +1800,6 @@ Custom CA certificates affect how Ignition fetches remote resources but they do 
 ```terminal
 $ coreos-installer iso customize rhcos-<version>-live.x86_64.iso --ignition-ca cert.pem
 ```
-
 
 
 [IMPORTANT]
@@ -2145,21 +1888,23 @@ You can set the iSCSI target and initiator values for automatic mounting, bootin
 
 ```text
 $ coreos-installer iso customize \
-    --pre-install mount-iscsi.sh \ 1
-    --post-install unmount-iscsi.sh \ 2
-    --dest-device /dev/disk/by-path/<IP_address>:<port>-iscsi-<target_iqn>-lun-<lun> \ 3
-    --dest-ignition config.ign \ 4
-    --dest-karg-append rd.iscsi.initiator=<initiator_iqn> \ 5
-    --dest-karg-append netroot=<target_iqn> \ 6
+    --pre-install mount-iscsi.sh \
+    --post-install unmount-iscsi.sh \
+    --dest-device /dev/disk/by-path/<IP_address>:<port>-iscsi-<target_iqn>-lun-<lun> \
+    --dest-ignition config.ign \
+    --dest-karg-append rd.iscsi.initiator=<initiator_iqn> \
+    --dest-karg-append netroot=<target_iqn> \
     -o custom.iso rhcos-<version>-live.x86_64.iso
 ```
 
-The script that gets run before installation. It should contain the iscsiadm commands for mounting the iSCSI target and any commands enabling multipathing.
-The script that gets run after installation. It should contain the command iscsiadm --mode node --logout=all.
-The location of the destination system. You must provide the IP address of the target portal, the associated port number, the target iSCSI node in IQN format, and the iSCSI logical unit number (LUN).
-The Ignition configuration for the destination system.
-The iSCSI initiator, or client, name in IQN format. The initiator forms a session to connect to the iSCSI target.
-The the iSCSI target, or server, name in IQN format.
+
+where:
+mount-iscsi.sh:: The script that gets run before installation. It should contain the iscsiadm commands for mounting the iSCSI target and any commands enabling multipathing.
+unmount-iscsi.sh:: The script that gets run after installation. It should contain the command iscsiadm --mode node --logout=all.
+<target_iqn>:: The location of the destination system. You must provide the IP address of the target portal, the associated port number, the target iSCSI node in IQN format, and the iSCSI logical unit number (LUN).
+config.ign:: The Ignition configuration for the destination system.
+<initiator_iqn>:: The iSCSI initiator, or client, name in IQN format. The initiator forms a session to connect to the iSCSI target.
+<target_iqn>:: The the iSCSI target, or server, name in IQN format.
 
 For more information about the iSCSI options supported by dracut, see the dracut.cmdline manual page.
 
@@ -2175,21 +1920,23 @@ You can set the iSCSI target and initiator values for automatic mounting, bootin
 
 ```text
 $ coreos-installer iso customize \
-    --pre-install mount-iscsi.sh \ 1
-    --post-install unmount-iscsi.sh \ 2
-    --dest-device /dev/mapper/mpatha \ 3
-    --dest-ignition config.ign \ 4
-    --dest-karg-append rd.iscsi.firmware=1 \ 5
-    --dest-karg-append rd.multipath=default \ 6
+    --pre-install mount-iscsi.sh \
+    --post-install unmount-iscsi.sh \
+    --dest-device /dev/mapper/mpatha \
+    --dest-ignition config.ign \
+    --dest-karg-append rd.iscsi.firmware=1 \
+    --dest-karg-append rd.multipath=default \
     -o custom.iso rhcos-<version>-live.x86_64.iso
 ```
 
-The script that gets run before installation. It should contain the iscsiadm commands for mounting the iSCSI target and any commands enabling multipathing.
-The script that gets run after installation. It should contain the command iscsiadm --mode node --logout=all.
-The path to the device. If you are using multipath, the multipath device, /dev/mapper/mpatha, If there are multiple multipath devices connected, or to be explicit, you can use the World Wide Name (WWN) symlink available in /dev/disk/by-path.
-The Ignition configuration for the destination system.
-The iSCSI parameter is read from the BIOS firmware.
-Optional: include this parameter if you are enabling multipathing.
+
+where:
+mount-iscsi.sh:: The script that gets run before installation. It should contain the iscsiadm commands for mounting the iSCSI target and any commands enabling multipathing.
+unmount-iscsi.sh:: The script that gets run after installation. It should contain the command iscsiadm --mode node --logout=all.
+/dev/mapper/mpatha:: The path to the device. If you are using multipath, the multipath device, /dev/mapper/mpatha, If there are multiple multipath devices connected, or to be explicit, you can use the World Wide Name (WWN) symlink available in /dev/disk/by-path.
+config.ign:: The Ignition configuration for the destination system.
+rd.iscsi.firmware=1:: The iSCSI parameter is read from the BIOS firmware.
+rd.multipath=default:: Optional: include this parameter if you are enabling multipathing.
 
 For more information about the iSCSI options supported by dracut, see the dracut.cmdline manual page.
 
@@ -2206,14 +1953,16 @@ You can use this feature to configure the {boot-media} to automatically install 
 
 ```terminal
 $ coreos-installer pxe customize rhcos-<version>-live-initramfs.x86_64.img \
-    --dest-ignition bootstrap.ign \ 1
-    --dest-device /dev/disk/by-id/scsi-<serial_number> \ 2
-    -o rhcos-<version>-custom-initramfs.x86_64.img 3
+    --dest-ignition bootstrap.ign \
+    --dest-device /dev/disk/by-id/scsi-<serial_number> \
+    -o rhcos-<version>-custom-initramfs.x86_64.img
 ```
 
-The Ignition config file that is generated from openshift-installer.
-When you specify this option, the {boot-media} automatically runs an install. Otherwise, the image remains configured for installing, but does not do so automatically unless you specify the coreos.inst.install_dev kernel argument.
-Use the customized initramfs file in your PXE configuration. Add the ignition.firstboot and ignition.platform.id=metal kernel arguments if they are not already present.
+
+where:
+--dest-ignition:: The Ignition config file that is generated from openshift-installer.
+<serial_number>:: When you specify this option, the {boot-media} automatically runs an install. Otherwise, the image remains configured for installing, but does not do so automatically unless you specify the coreos.inst.install_dev kernel argument.
+<version>:: Use the customized initramfs file in your PXE configuration. Add the ignition.firstboot and ignition.platform.id=metal kernel arguments if they are not already present.
 
 Applying your customizations affects every subsequent boot of RHCOS.
 
@@ -2226,18 +1975,20 @@ On clusters installed with Red Hat OpenShift Container Platform 4.12 and above, 
 
 ```terminal
 $ coreos-installer pxe customize rhcos-<version>-live-initramfs.x86_64.img \
-  --dest-ignition <path> \1
-  --dest-console tty0 \2
-  --dest-console ttyS0,<options> \3
-  --dest-device /dev/disk/by-id/scsi-<serial_number> \4
-  -o rhcos-<version>-custom-initramfs.x86_64.img 5
+  --dest-ignition <path> \//
+  --dest-console tty0 \//
+  --dest-console ttyS0,<options> \//
+  --dest-device /dev/disk/by-id/scsi-<serial_number> \//
+  -o rhcos-<version>-custom-initramfs.x86_64.img
 ```
 
-The location of the Ignition config to install.
-The desired secondary console. In this case, the graphical console. Omitting this option will disable the graphical console.
-The desired primary console. In this case, the serial console. The options field defines the baud rate and other settings. A common value for this field is 115200n8. If no options are provided, the default kernel value of 9600n8 is used. For more information on the format of this option, see the Linux kernel serial console documentation.
-The specified disk to install to. If you omit this option, the {boot-media} automatically runs the installer which will fail unless you also specify the coreos.inst.install_dev kernel argument.
-Use the customized initramfs file in your PXE configuration. Add the ignition.firstboot and ignition.platform.id=metal kernel arguments if they are not already present.
+
+where:
+<path>:: The location of the Ignition config to install.
+tty0:: The desired secondary console. In this case, the graphical console. Omitting this option will disable the graphical console.
+<options>:: The desired primary console. In this case, the serial console. The options field defines the baud rate and other settings. A common value for this field is 115200n8. If no options are provided, the default kernel value of 9600n8 is used. For more information on the format of this option, see the Linux kernel serial console documentation.
+<serial_number>:: The specified disk to install to. If you omit this option, the {boot-media} automatically runs the installation program which will fail unless you also specify the coreos.inst.install_dev kernel argument.
+<version>:: Use the customized initramfs file in your PXE configuration. Add the ignition.firstboot and ignition.platform.id=metal kernel arguments if they are not already present.
 
 Your customizations are applied and affect every subsequent boot of the {boot-media}.
 
@@ -2261,7 +2012,6 @@ $ coreos-installer pxe customize rhcos-<version>-live-initramfs.x86_64.img \
 ```
 
 3. Use the customized initramfs file in your PXE configuration. Add the ignition.firstboot and ignition.platform.id=metal kernel arguments if they are not already present.
-
 
 [IMPORTANT]
 ----
@@ -2351,21 +2101,23 @@ You can set the iSCSI target and initiator values for automatic mounting, bootin
 
 ```text
 $ coreos-installer pxe customize \
-    --pre-install mount-iscsi.sh \ 1
-    --post-install unmount-iscsi.sh \ 2
-    --dest-device /dev/disk/by-path/<IP_address>:<port>-iscsi-<target_iqn>-lun-<lun> \ 3
-    --dest-ignition config.ign \ 4
-    --dest-karg-append rd.iscsi.initiator=<initiator_iqn> \ 5
-    --dest-karg-append netroot=<target_iqn> \ 6
+    --pre-install mount-iscsi.sh \
+    --post-install unmount-iscsi.sh \
+    --dest-device /dev/disk/by-path/<IP_address>:<port>-iscsi-<target_iqn>-lun-<lun> \
+    --dest-ignition config.ign \
+    --dest-karg-append rd.iscsi.initiator=<initiator_iqn> \
+    --dest-karg-append netroot=<target_iqn> \
     -o custom.img rhcos-<version>-live-initramfs.x86_64.img
 ```
 
-The script that gets run before installation. It should contain the iscsiadm commands for mounting the iSCSI target and any commands enabling multipathing.
-The script that gets run after installation. It should contain the command iscsiadm --mode node --logout=all.
-The location of the destination system. You must provide the IP address of the target portal, the associated port number, the target iSCSI node in IQN format, and the iSCSI logical unit number (LUN).
-The Ignition configuration for the destination system.
-The iSCSI initiator, or client, name in IQN format. The initiator forms a session to connect to the iSCSI target.
-The the iSCSI target, or server, name in IQN format.
+
+where:
+mount-iscsi.sh:: The script that gets run before installation. It should contain the iscsiadm commands for mounting the iSCSI target and any commands enabling multipathing.
+unmount-iscsi.sh:: The script that gets run after installation. It should contain the command iscsiadm --mode node --logout=all.
+<target_iqn>:: The location of the destination system. You must provide the IP address of the target portal, the associated port number, the target iSCSI node in IQN format, and the iSCSI logical unit number (LUN).
+config.ign:: The Ignition configuration for the destination system.
+<initiator_iqn>:: The iSCSI initiator, or client, name in IQN format. The initiator forms a session to connect to the iSCSI target.
+<target_iqn>:: The the iSCSI target, or server, name in IQN format.
 
 For more information about the iSCSI options supported by dracut, see the dracut.cmdline manual page.
 
@@ -2381,29 +2133,29 @@ You can set the iSCSI target and initiator values for automatic mounting, bootin
 
 ```text
 $ coreos-installer pxe customize \
-    --pre-install mount-iscsi.sh \ 1
-    --post-install unmount-iscsi.sh \ 2
-    --dest-device /dev/mapper/mpatha \ 3
-    --dest-ignition config.ign \ 4
-    --dest-karg-append rd.iscsi.firmware=1 \ 5
-    --dest-karg-append rd.multipath=default \ 6
+    --pre-install mount-iscsi.sh \
+    --post-install unmount-iscsi.sh \
+    --dest-device /dev/mapper/mpatha \
+    --dest-ignition config.ign \
+    --dest-karg-append rd.iscsi.firmware=1 \
+    --dest-karg-append rd.multipath=default \
     -o custom.img rhcos-<version>-live-initramfs.x86_64.img
 ```
 
-The script that gets run before installation. It should contain the iscsiadm commands for mounting the iSCSI target.
-The script that gets run after installation. It should contain the command iscsiadm --mode node --logout=all.
-The path to the device. If you are using multipath, the multipath device, /dev/mapper/mpatha, If there are multiple multipath devices connected, or to be explicit, you can use the World Wide Name (WWN) symlink available in /dev/disk/by-path.
-The Ignition configuration for the destination system.
-The iSCSI parameter is read from the BIOS firmware.
-Optional: include this parameter if you are enabling multipathing.
+
+where:
+mount-iscsi.sh:: The script that gets run before installation. It should contain the iscsiadm commands for mounting the iSCSI target.
+unmount-iscsi.sh:: The script that gets run after installation. It should contain the command iscsiadm --mode node --logout=all.
+/dev/mapper/mpatha:: The path to the device. If you are using multipath, the multipath device, /dev/mapper/mpatha, If there are multiple multipath devices connected, or to be explicit, you can use the World Wide Name (WWN) symlink available in /dev/disk/by-path.
+config.ign:: The Ignition configuration for the destination system.
+rd.iscsi.firmware=1:: The iSCSI parameter is read from the BIOS firmware.
+rd.multipath=default:: Optional: include this parameter if you are enabling multipathing.
 
 For more information about the iSCSI options supported by dracut, see the dracut.cmdline manual page.
 
-### Advanced RHCOS installation reference
+### Networking and bonding options for ISO installations
 
-This section illustrates the networking configuration and other advanced options that allow you to modify the Red Hat Enterprise Linux CoreOS (RHCOS) manual installation process. The following tables describe the kernel arguments and command-line options you can use with the RHCOS live installer and the coreos-installer command.
-
-#### Networking and bonding options for ISO installations
+You can configure advanced options so that you can modify the Red Hat Enterprise Linux CoreOS (RHCOS) manual installation process. The subsequent sections show examples of networking options for an ISO installation.
 
 If you install RHCOS from an ISO image, you can add kernel arguments manually when you boot the image to configure networking for a node. If no networking arguments are specified, DHCP is activated in the initramfs when RHCOS detects that networking is required to fetch the Ignition config file.
 
@@ -2422,239 +2174,6 @@ Ordering is important when adding the kernel arguments: ip=, nameserver=, and th
 ----
 
 The networking options are passed to the dracut tool during system boot. For more information about the networking options supported by dracut, see the dracut.cmdline manual page.
-
-The following examples are the networking options for ISO installation.
-
-##### Configuring DHCP or static IP addresses
-
-To configure an IP address, either use DHCP (ip=dhcp) or set an individual static IP address (ip=<host_ip>). If setting a static IP, you must then identify the DNS server IP address (nameserver=<dns_ip>) on each node. The following example sets:
-
-* The node's IP address to 10.10.10.2
-* The gateway address to 10.10.10.254
-* The netmask to 255.255.255.0
-* The hostname to core0.example.com
-* The DNS server address to 4.4.4.41
-* The auto-configuration value to none. No auto-configuration is required when IP networking is configured statically.
-
-
-```terminal
-ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp1s0:none
-nameserver=4.4.4.41
-```
-
-
-
-[NOTE]
-----
-When you use DHCP to configure IP addressing for the RHCOS machines, the machines also obtain the DNS server information through DHCP. For DHCP-based deployments, you can define the DNS server address that is used by the RHCOS nodes through your DHCP server configuration.
-----
-
-##### Configuring an IP address without a static hostname
-
-You can configure an IP address without assigning a static hostname. If a static hostname is not set by the user, it will be picked up and automatically set by a reverse DNS lookup. To configure an IP address without a static hostname refer to the following example:
-
-* The node's IP address to 10.10.10.2
-* The gateway address to 10.10.10.254
-* The netmask to 255.255.255.0
-* The DNS server address to 4.4.4.41
-* The auto-configuration value to none. No auto-configuration is required when IP networking is configured statically.
-
-
-```terminal
-ip=10.10.10.2::10.10.10.254:255.255.255.0::enp1s0:none
-nameserver=4.4.4.41
-```
-
-
-##### Specifying multiple network interfaces
-
-You can specify multiple network interfaces by setting multiple ip= entries.
-
-
-```terminal
-ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp1s0:none
-ip=10.10.10.3::10.10.10.254:255.255.255.0:core0.example.com:enp2s0:none
-```
-
-
-##### Configuring default gateway and route
-
-Optional: You can configure routes to additional networks by setting an rd.route= value.
-
-
-[NOTE]
-----
-When you configure one or multiple networks, one default gateway is required. If the additional network gateway is different from the primary network gateway, the default gateway must be the primary network gateway.
-----
-
-* Run the following command to configure the default gateway:
-
-```terminal
-ip=::10.10.10.254::::
-```
-
-* Enter the following command to configure the route for the additional network:
-
-```terminal
-rd.route=20.20.20.0/24:20.20.20.254:enp2s0
-```
-
-
-##### Disabling DHCP on a single interface
-
-You can disable DHCP on a single interface, such as when there are two or more network interfaces and only one interface is being used. In the example, the enp1s0 interface has a static networking configuration and DHCP is disabled for enp2s0, which is not used:
-
-
-```terminal
-ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp1s0:none
-ip=::::core0.example.com:enp2s0:none
-```
-
-
-##### Combining DHCP and static IP configurations
-
-You can combine DHCP and static IP configurations on systems with multiple network interfaces, for example:
-
-
-```terminal
-ip=enp1s0:dhcp
-ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp2s0:none
-```
-
-
-##### Configuring VLANs on individual interfaces
-
-Optional: You can configure VLANs on individual interfaces by using the vlan= parameter.
-
-* To configure a VLAN on a network interface and use a static IP address, run the following command:
-
-```terminal
-ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:enp2s0.100:none
-vlan=enp2s0.100:enp2s0
-```
-
-* To configure a VLAN on a network interface and to use DHCP, run the following command:
-
-```terminal
-ip=enp2s0.100:dhcp
-vlan=enp2s0.100:enp2s0
-```
-
-
-##### Providing multiple DNS servers
-
-You can provide multiple DNS servers by adding a nameserver= entry for each server, for example:
-
-
-```terminal
-nameserver=1.1.1.1
-nameserver=8.8.8.8
-```
-
-
-##### Bonding multiple network interfaces to a single interface
-
-Optional: You can bond multiple network interfaces to a single interface by using the bond= option. Refer to the following examples:
-
-* The syntax for configuring a bonded interface is: bond=<name>[:<network_interfaces>][:options]
-
-<name> is the bonding device name (bond0), <network_interfaces> represents a comma-separated list of physical (ethernet) interfaces (em1,em2),
-and options is a comma-separated list of bonding options. Enter modinfo bonding to see available options.
-* When you create a bonded interface using bond=, you must specify how the IP address is assigned and other
-information for the bonded interface.
-* To configure the bonded interface to use DHCP, set the bond's IP address to dhcp. For example:
-
-```terminal
-bond=bond0:em1,em2:mode=active-backup
-ip=bond0:dhcp
-```
-
-* To configure the bonded interface to use a static IP address, enter the specific IP address you want and related information. For example:
-
-```terminal
-bond=bond0:em1,em2:mode=active-backup
-ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:bond0:none
-```
-
-
-##### Bonding multiple SR-IOV network interfaces to a dual port NIC interface
-
-
-[IMPORTANT]
-----
-{FeatureName} is a Technology Preview feature only. Technology Preview features are not supported with Red Hat production service level agreements (SLAs) and might not be functionally complete. Red Hat does not recommend using them in production. These features provide early access to upcoming product features, enabling customers to test functionality and provide feedback during the development process.
-For more information about the support scope of Red Hat Technology Preview features, see Technology Preview Features Support Scope.
-----
-
-Optional: You can bond multiple SR-IOV network interfaces to a dual port NIC interface by using the bond= option.
-
-On each node, you must perform the following tasks:
-
-1. Create the SR-IOV virtual functions (VFs) following the guidance in Managing SR-IOV devices. Follow the procedure in the "Attaching SR-IOV networking devices to virtual machines" section.
-2. Create the bond, attach the desired VFs to the bond and set the bond link state up following the guidance in Configuring network bonding. Follow any of the described procedures to create the bond.
-
-The following examples illustrate the syntax you must use:
-
-* The syntax for configuring a bonded interface is bond=<name>[:<network_interfaces>][:options].
-
-<name> is the bonding device name (bond0), <network_interfaces> represents the virtual functions (VFs) by their known name in the kernel and shown in the output of the ip link command(eno1f0, eno2f0), and options is a comma-separated list of bonding options. Enter modinfo bonding to see available options.
-* When you create a bonded interface using bond=, you must specify how the IP address is assigned and other information for the bonded interface.
-* To configure the bonded interface to use DHCP, set the bond's IP address to dhcp. For example:
-
-```terminal
-bond=bond0:eno1f0,eno2f0:mode=active-backup
-ip=bond0:dhcp
-```
-
-* To configure the bonded interface to use a static IP address, enter the specific IP address you want and related information. For example:
-
-```terminal
-bond=bond0:eno1f0,eno2f0:mode=active-backup
-ip=10.10.10.2::10.10.10.254:255.255.255.0:core0.example.com:bond0:none
-```
-
-
-##### Using network teaming
-
-Optional: You can use a network teaming as an alternative to bonding by using the team= parameter:
-
-* The syntax for configuring a team interface is: team=name[:network_interfaces]
-
-name is the team device name (team0) and network_interfaces represents a comma-separated list of physical (ethernet) interfaces (em1, em2).
-
-
-[NOTE]
-----
-Teaming is planned to be deprecated when RHCOS switches to an upcoming version of RHEL. For more information, see this Red Hat Knowledgebase Article.
-----
-
-Use the following example to configure a network team:
-
-
-```terminal
-team=team0:em1,em2
-ip=team0:dhcp
-```
-
-
-#### coreos-installer options for ISO and PXE installations
-
-You can install RHCOS by running coreos-installer install <options> <device> at the command prompt, after booting into the RHCOS live environment from an ISO image.
-
-The following table shows the subcommands, options, and arguments you can pass to the coreos-installer command.
-
-
-
-#### coreos.inst boot options for ISO or PXE installations
-
-You can automatically invoke coreos-installer options at boot time by passing coreos.inst boot arguments to the RHCOS live installer. These are provided in addition to the standard boot arguments.
-
-* For ISO installations, the coreos.inst options can be added by interrupting the automatic boot at the bootloader menu. You can interrupt the automatic boot by pressing TAB while the RHEL CoreOS (Live) menu option is highlighted.
-* For PXE or iPXE installations, the coreos.inst options must be added to the APPEND line before the RHCOS live installer is booted.
-
-The following table shows the RHCOS live installer coreos.inst boot options for ISO and PXE installations.
-
-
 
 ## Enabling multipathing with kernel arguments on RHCOS
 

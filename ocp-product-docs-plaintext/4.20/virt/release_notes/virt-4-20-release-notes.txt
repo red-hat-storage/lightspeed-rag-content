@@ -120,6 +120,7 @@ For a complete list of virtualization metrics, see the openshift/runbooks Git re
 
 Deprecated features are included in the current release and supported. However, they will be removed in a future release and are not recommended for new deployments.
 
+* The virtctl ssh type/name[.namespace] target syntax is deprecated. Use the virtctl ssh type/name[/namespace] syntax instead. Scripts and automation that rely on the deprecated syntax might fail after upgrading. (CNV-71711)
 * The OperatorConditionsUnhealthy alert is deprecated. You can safely silence it.
 * All hot plugged disks are persistent by default. The use of non-persistent hot plugged disks is deprecated. They will not be supported in future releases.
 
@@ -152,8 +153,6 @@ Technology Preview Features Support Scope
 * Restoring a snapshot of a VM after a storage migration no longer fails because of unreferenced dataVolumeTemplate objects. The snapshot process now refreshes the data volume templates in the controller revision to match the volumes list, ensuring consistent data recovery. (CNV-61279)
 
 * The migration controller in the virt-handler pod was redesigned to separate source, target, and VM responsibilities, ensure deterministic completion, and use a unified VirtualMachineInstance (VMI) cache. (CNV-48348)
-
-* Virtual Trusted Platform Module (vTPM) persistence is now enabled by default in VM templates. BitLocker system checks in Windows VMs no longer pass with non-persistent vTPM devices. (CNV-36448)
 
 * On s390x systems, VMs created from a template with the Boot from CD option now boot correctly. CD-ROM devices are attached as SCSI instead of SATA, which is not supported on s390x architecture. (CNV-61740)
 

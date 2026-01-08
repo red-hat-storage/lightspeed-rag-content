@@ -1,6 +1,7 @@
 # Backing up workloads on OADP with Red Hat OpenShift Container Platform
 
 
+To back up and restore workloads on ROSA, you can use OADP. You can create a backup of a workload, restore it from the backup, and verify the restoration. You can also clean up the OADP Operator, backup storage, and AWS resources when they are no longer needed.
 
 # Performing a backup with OADP and Red Hat OpenShift Container Platform
 
@@ -31,7 +32,8 @@ $ oc expose service/hello-openshift -n hello-world
 $ curl `oc get route/hello-openshift -n hello-world -o jsonpath='{.spec.host}'`
 ```
 
-Example output
+
+You should see an output similar to the following example:
 
 ```terminal
 Hello OpenShift!
@@ -60,7 +62,8 @@ EOF
 $ watch "oc -n openshift-adp get backup hello-world -o json | jq .status"
 ```
 
-Example output
+
+You should see an output similar to the following example:
 
 ```json
 {
@@ -103,7 +106,8 @@ EOF
 $ watch "oc -n openshift-adp get restore hello-world -o json | jq .status"
 ```
 
-Example output
+
+You should see an output similar to the following example:
 
 ```json
 {
@@ -124,7 +128,8 @@ Example output
 $ oc -n hello-world get pods
 ```
 
-Example output
+
+You should see an output similar to the following example:
 
 ```terminal
 NAME                              READY   STATUS    RESTARTS   AGE
@@ -137,7 +142,8 @@ hello-openshift-9f885f7c6-kdjpj   1/1     Running   0          90s
 $ curl `oc get route/hello-openshift -n hello-world -o jsonpath='{.spec.host}'`
 ```
 
-Example output
+
+You should see an output similar to the following example:
 
 ```terminal
 Hello OpenShift!
