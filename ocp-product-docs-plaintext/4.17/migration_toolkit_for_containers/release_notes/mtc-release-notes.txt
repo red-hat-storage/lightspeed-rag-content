@@ -6,6 +6,51 @@ The MTC enables you to migrate application workloads between Red Hat OpenShift C
 MTC provides a web console and an API, based on Kubernetes custom resources, to help you control the migration and minimize application downtime.
 For information on the support policy for MTC, see OpenShift Application and Cluster Migration Solutions, part of the Red Hat Red Hat OpenShift Container Platform Life Cycle Policy.
 
+# Migration Toolkit for Containers 1.8.14 release notes
+
+Migration Toolkit for Containers (MTC) 1.8.14 release notes list resolved issues.
+
+MTC 1.8.14 restores full support for OpenShift Container Platform versions 4.12 and 4.13. This release realigns the MTC upgrade path across all supported OpenShift versions, ensuring a stable foundation for future updates.
+
+## Resolved issues
+
+Fixed incompatible Operator versions due to an incorrect OpenShift Container Platform 4.18 catalog update:: Before this update, the OpenShift Container Platform 4.18 Operators catalog was accidentally pushed to 4.12 and later versions. As a consequence, clusters on OpenShift Container Platform versions 4.12-4.17 installed incompatible Operator versions. With this release, MTC 1.8 support is extended to OpenShift Container Platform 4.12 and 4.13. As a result, the bug fix updates the MTC Operator to the correct version in OpenShift Container Platform catalogs to provide updates for impacted customers.
+
+If you are on OpenShift Container Platform 4.12 and 4.13, upgrade to MTC 1.8.14 as soon as possible to ensure continued support and access to future security patches.
+
+MIG-1874
+MTC Operator includes latest rsync version:: Before this update, the MTC Operator mistakenly included an older version of the rsync package. This release updates the MTC Operator to include the latest rsync package.
+
+MIG-1876
+
+# Migration Toolkit for Containers 1.8.13 release notes
+
+Migration Toolkit for Containers (MTC) 1.8.13 is a Container Grade Only (CGO) release, which is released to refresh the health grades of the containers. No code was changed in the product itself compared to that of MTC 1.8.12.
+
+# Migration Toolkit for Containers 1.8.12 release notes
+
+The Migration Toolkit for Containers (MTC) 1.8.12 section lists known and resolved issues.
+
+## Resolved issues
+
+Migration Toolkit for Containers (MTC) 1.8.12 has the following resolved issues:
+
+Live migration of virtual machine instance with RWO configuration works in MigMigration:: With this release, the live migration of virtual machine instances (VMIs) no longer fails for MigMigration when the persistent volume claims (PVC) of VMIs are not shared with the access mode configuration ReadWriteMany. The migration plan does not prevent you from migrating the VMIs because of the RWO volumes. As a result, you can migrate VMs with ReadWriteOnce volumes.
+
+(MIG-1770)
+
+# Migration Toolkit for Containers 1.8.11 release notes
+
+Migration Toolkit for Containers (MTC) 1.8.11 is a Container Grade Only (CGO) release, which is released to refresh the health grades of the containers. No code was changed in the product itself compared to that of MTC 1.8.10.
+
+# Migration Toolkit for Containers 1.8.10 release notes
+
+## Resolved issues
+
+Migration Toolkit for Containers (MTC) 1.8.10 has the following major resolved issues:
+
+With this release, migmigration object no longer fails to clean up stale virt-handler pods for stopped virtual machines (VMs) in an Azure Red Hat OpenShift (ARO) cluster with MTC Operator and Red Hat OpenShift Data Foundation (ODF) storage cluster-CEPH RBD virtualization. This resolution addresses an issue where migration failure occurred due to an attempt to clean up non-existent virt-handler pods during live migration when the VM was stopped and no VMI existed. As a result, stopped VMs no longer prevent successful migration. (MIG-1762)
+
 # Migration Toolkit for Containers 1.8.9 release notes
 
 ## Resolved issues

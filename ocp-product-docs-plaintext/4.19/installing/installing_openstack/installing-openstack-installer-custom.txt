@@ -323,9 +323,9 @@ spec:
 
 
 where:
-openshift-image-registry:: Specifying this namespace allows the Cluster Image Registry Operator to consume the PVC.
-storage:: This optional field adjusts the volume size.
-storageClassName:: Specifies the name of the storage class that you created.
+metadata.namespace:: Specifying the openshift-image-registry namespace allows the Cluster Image Registry Operator to consume the PVC.
+spec.resources.requests.storage:: This optional field adjusts the volume size.
+spec.storageClassName:: Specifies the name of the storage class that you created.
 4. From a command line, apply the configuration:
 
 ```terminal
@@ -595,6 +595,7 @@ However, you must have an active subscription to access this page.
 # Creating the installation configuration file
 
 You can customize the Red Hat OpenShift Container Platform cluster you install on
+
 Red Hat OpenStack Platform (RHOSP).
 
 * You have the Red Hat OpenShift Container Platform installation program and the pull secret for your cluster.

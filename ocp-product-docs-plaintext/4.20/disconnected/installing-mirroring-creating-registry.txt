@@ -12,7 +12,7 @@ The mirror registry for Red Hat OpenShift is not intended to be a substitute for
 # Prerequisites
 
 * An Red Hat OpenShift Container Platform subscription.
-* Red Hat Enterprise Linux (RHEL) 8 and 9 with Podman 3.4.2 or later and OpenSSL installed.
+* Red Hat Enterprise Linux (RHEL) 8 and 9 with Podman 3.4.2 or later and OpenSSL installed. If you are using Podman 5.7 or later, see "Configuring rootless Podman networking".
 * Fully qualified domain name for the Red Hat Quay service, which must resolve through a DNS server.
 * Key-based SSH connectivity on the target host. SSH keys are automatically generated for local installs. For remote hosts, you must generate your own SSH keys.
 * 2 or more vCPUs.
@@ -50,6 +50,50 @@ Because the mirror registry for Red Hat OpenShift uses local storage, you should
 * Support for Red Hat product images that are pushed to the mirror registry for Red Hat OpenShift for bootstrapping purposes are covered by valid subscriptions for each respective product. A list of exceptions to further enable the bootstrap experience can be found on the Self-managed Red Hat OpenShift sizing and subscription guide.
 * Content built by customers should not be hosted by the mirror registry for Red Hat OpenShift.
 * Using the mirror registry for Red Hat OpenShift with more than one cluster is discouraged because multiple clusters can create a single point of failure when updating your cluster fleet. Instead, use the mirror registry for Red Hat OpenShift to install a cluster that can host a production-grade, highly-available registry such as Red Hat Quay, which can serve Red Hat OpenShift Container Platform content to other clusters.
+
+# Configuring rootless Podman networking
+
+To restore rootless Podman networking when the default pasta stack fails on Red Hat OpenShift Container Platform mirror or install hosts, you can set the default rootless network back to slirp4netns in the /etc/containers/containers.conf file, or in the user&#8217;s ~/.config/containers/container.conf file.
+
+You might need to configure rootless Podman networking after upgrading to RHEL 9.5 or Podman 5.0. In these versions, the default networking stack changed from slirp4netns to pasta. As a result, systems that previously operated without a default route might no longer be able to establish network connectivity and could display the following error:
+
+
+```terminal
+Error: pasta failed with exit code 1:
+External interface not usable
+```
+
+
+* You have updated to RHEL 9.5 or Podman 5.0.
+
+1. Use your preferred IDE to modify the /etc/containers/containers.conf or ~/.config/containers/container.conf file.
+1. To modify the /etc/containers/containers.conf file, enter the following command:
+
+```terminal
+$ nano /etc/containers/containers.conf
+```
+
+2. To modify the ~/.config/containers/container.conf file, enter the following command:
+
+```terminal
+$ nano ~/.config/containers/container.conf
+```
+
+2. Add, or update, the [network] section as in the following example:
+
+```text
+# ...
+[network]
+default_rootless_network_cmd = "slirp4netns"
+# ...
+```
+
+3. Restart the Podman system as the rootless user by entering the following command. Note that all containers must be stopped and restarted for the change to take effect.
+
+```terminal
+$ podman system migrate
+```
+
 
 # Mirroring on a local host with mirror registry for Red Hat OpenShift
 
@@ -325,6 +369,31 @@ These release notes track the development of the mirror registry for Red&#160;Ha
 ## Mirror registry for Red Hat OpenShift 2.0 release notes
 
 The following sections provide details for each 2.0 release of the mirror registry for Red&#160;Hat OpenShift.
+
+### Mirror registry for Red Hat OpenShift 2.0.10
+
+Issued: 03 March 2026
+
+Mirror registry for Red&#160;Hat OpenShift is now available with Red&#160;Hat Quay 3.12.14.
+
+The following advisory is available for the mirror registry for Red&#160;Hat OpenShift:
+
+* RHBA-2026:3953 - mirror registry for Red Hat OpenShift 2.0.10
+
+The following bugs were fixed as part of this release:
+
+* PROJQUAY-9799. In this update, upgrading from PostgreSQL to SQLite without proper configuration previously triggered a SQLite cursor error. This error prevented Quay from starting after the SQLite upgrade, leading to service disruption. With this release, the SQLite upgrade process no longer triggers the cursor error, enabling a successful Quay upgrade without crashes due to SQLite optimization issues.
+* PROJQUAY-10093. The Mirror registry for Red Hat OpenShift has been upgraded to use the latest Redis 6 (redis-6:1-1766406130) version.
+
+### Mirror registry for Red Hat OpenShift 2.0.9
+
+Issued: 17 November 2025
+
+Mirror registry for Red&#160;Hat OpenShift is now available with Red&#160;Hat Quay 3.12.13.
+
+The following advisory is available for the mirror registry for Red&#160;Hat OpenShift:
+
+* RHBA-2025:21600 - mirror registry for Red Hat OpenShift 2.0.9
 
 ### Mirror registry for Red Hat OpenShift 2.0.8
 

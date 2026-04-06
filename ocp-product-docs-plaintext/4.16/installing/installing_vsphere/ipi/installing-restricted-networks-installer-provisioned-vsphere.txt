@@ -132,6 +132,7 @@ The following table outlines an example of the relationship among regions, zones
 # Creating the installation configuration file
 
 You can customize the Red Hat OpenShift Container Platform cluster you install on
+
 VMware vSphere.
 
 * You have the Red Hat OpenShift Container Platform installation program and the pull secret for your cluster.
@@ -232,7 +233,7 @@ imageContentSources:
 
 
 For these values, use the imageContentSources that you recorded during mirror registry creation.
-4. Optional: Set the publishing strategy to Internal:
+4. Optionally, set the publishing strategy to Internal:
 
 ```yaml
 publish: Internal

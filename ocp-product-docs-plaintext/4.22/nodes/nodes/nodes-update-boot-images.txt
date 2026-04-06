@@ -6,6 +6,12 @@ The following table lists the platforms on which boot image management is availa
 
 For all other platforms, the MCO does not update the boot image with each cluster update.
 
+[IMPORTANT]
+----
+Boot image management for control plane nodes is a Technology Preview feature only. Technology Preview features are not supported with Red Hat production service level agreements (SLAs) and might not be functionally complete. Red Hat does not recommend using them in production. These features provide early access to upcoming product features, enabling customers to test functionality and provide feedback during the development process.
+For more information about the support scope of Red Hat Technology Preview features, see Technology Preview Features Support Scope.
+----
+
 # About boot image management
 
 With boot image management enabled, the Machine Config Operator (MCO) manages and updates the Red Hat Enterprise Linux CoreOS (RHCOS) version of the boot image in the machine sets for your control plane or worker nodes. This means that the MCO updates the boot image whenever you update your cluster. Without boot image management enabled, if your cluster was originally created with an older Red Hat OpenShift Container Platform version, the boot image that the MCO would use to create new nodes is an older Red Hat Enterprise Linux CoreOS (RHCOS) version, even if your cluster is at a later Red Hat OpenShift Container Platform version.
@@ -73,9 +79,6 @@ If any of the machine sets for which you want to enable boot image management us
 2. Manually update the *-user-data secret to use Ignition version to 3.2.0.
 3. Enable the boot image management feature. For information, see "Enabling boot image management".
 ----
-
-* Disabling boot image management
-* Enabling boot image management
 
 # Disabling boot image management
 
@@ -191,29 +194,7 @@ Because the boot image management feature for worker nodes is default for the Go
 
 Enabling the feature updates the boot image to the Red Hat Enterprise Linux CoreOS (RHCOS) boot image version appropriate for your cluster. If the cluster is again updated to a new Red Hat OpenShift Container Platform version in the future, the boot image is updated again. New nodes created after enabling the feature use the updated boot image. This feature has no effect on existing nodes.
 
-* If you are enabling boot image management for control plane machine sets, you enabled the required Technology Preview features for your cluster by editing the FeatureGate CR named cluster:
-
-```terminal
-$ oc edit featuregate cluster
-```
-
-Example FeatureGate CR
-
-```yaml
-apiVersion: config.openshift.io/v1
-kind: FeatureGate
-metadata:
-  name: cluster
-spec:
-  featureSet: TechPreviewNoUpgrade 1
-```
-
-Enables the required ManagedBootImagesCPMS feature gate.
-
-[WARNING]
-----
-Do not enable this feature set on production clusters. Enabling the TechPreviewNoUpgrade feature set on your cluster cannot be undone and prevents minor version updates. This feature set allows you to enable these Technology Preview features on test clusters, where you can fully test them. Do not enable this feature set on production clusters.
-----
+* If you are enabling boot image management for control plane machine sets, you enabled the required Technology Preview features for your cluster by editing the FeatureGate CR named cluster.
 
 1. Edit the MachineConfiguration object, named cluster, by using the following command:
 
@@ -356,3 +337,8 @@ Example output
 
 where:
 <version>:: Specifies the boot image version.
+
+# Additional resources
+
+* Disabling boot image management
+* Enabling boot image management
