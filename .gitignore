@@ -1,7 +1,9 @@
+odf/**/chunks
+odf/**/stripped
+odf/**/*.sqlite
+.venv
 __pycache__
 embeddings_model/model.safetensors
 html_embeddings.log
 vector_db
-odf/**/chunks
-odf/**/stripped
-odf/**/*.sqlite
+/venv
