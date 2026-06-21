@@ -1,5 +1,7 @@
 # Embedding Pipeline
 
+> **OKP adoption notice:** With OKP adoption, the embedding pipeline is used only for BYOK customer content. OCP product docs embedding is deprecated — product documentation is served by OKP via the RHOKP sidecar deployed by the operator.
+
 This spec defines the shared behavioral rules that all pipeline implementations (plaintext, HTML, lsc library) must satisfy. Individual pipeline architectures are documented in the corresponding `how/` specs.
 
 ## Behavioral Rules -- Chunking
@@ -84,6 +86,6 @@ This spec defines the shared behavioral rules that all pipeline implementations 
 
 ## Planned Changes
 
-- [PLANNED: OLS-1729] Embedding model fine-tuning -- generate domain-specific vocabulary from OCP docs and augment the embedding model's vocabulary corpus.
-- [PLANNED: OLS-2294] Add metadata generation stage -- add a dedicated metadata generation/enrichment step to the pipeline.
-- [PLANNED: OLS-2903] OKP-based RAG -- integrate OKP (OpenShift Knowledge Platform) errata content.
+- [REMOVED: OLS-1729] ~~Embedding model fine-tuning~~ -- superseded by OKP adoption; OCP docs no longer use FAISS embeddings.
+- [REMOVED: OLS-2294] ~~Add metadata generation stage~~ -- superseded by OKP adoption; OCP docs pipeline is deprecated.
+- [REMOVED: OLS-2903] ~~OKP-based RAG~~ -- completed; OKP is now the primary OCP docs retrieval mechanism via the RHOKP sidecar.

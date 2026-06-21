@@ -1,21 +1,23 @@
 # System Overview
 
-OpenShift LightSpeed RAG Content is a build-time artifact producer for the OpenShift LightSpeed AI assistant. It converts OpenShift product documentation and operational runbooks into pre-built FAISS vector indexes, packages them alongside the embedding model into container images, and publishes those images for consumption by the lightspeed-service at runtime.
+> **Deprecation notice:** The main RAG content image (pre-built FAISS vector indexes of OCP product documentation) is deprecated. OCP product documentation is now served by the Offline Knowledge Portal (OKP) via the RHOKP sidecar deployed by the operator. This repository now provides BYOK (Bring Your Own Knowledge) tooling only — a container image that lets customers build custom RAG indexes from their own Markdown content.
+
+OpenShift LightSpeed RAG Content is a BYOK tooling provider for the OpenShift LightSpeed AI assistant. It packages an embedding model and build tools into a container image that customers use to produce custom FAISS vector indexes from their own Markdown content. The resulting BYOK indexes are consumed by lightspeed-service at runtime.
 
 ## Behavioral Rules
 
-1. The project produces pre-built FAISS vector indexes from three content sources: OCP product documentation, OpenShift alert runbooks, and customer-supplied Markdown (BYOK). The indexes are packaged as container images consumed by lightspeed-service.
+1. The project produces a BYOK tool image that customers use to build custom FAISS vector indexes from customer-supplied Markdown content. The resulting indexes are packaged as container images consumed by lightspeed-service. [DEPRECATED: The project previously also produced pre-built indexes from OCP product documentation and OpenShift alert runbooks. OCP docs are now served by OKP via the RHOKP sidecar.]
 
-2. The project is a build-time artifact producer. All computation -- document conversion, chunking, embedding generation, and vector store creation -- happens during the container image build or via offline scripts. The project never runs at runtime.
+2. The project is a build-time artifact producer. All computation -- document conversion, chunking, embedding generation, and vector store creation -- happens during the container image build or via offline scripts. The project never runs at runtime. This now applies to BYOK content only.
 
-3. Two container image artifacts are produced:
-   - **Main RAG content image**: Contains all OCP version vector indexes, the `latest` symlink, and the embedding model. Consumed by lightspeed-service as a volume mount.
+3. One container image artifact is produced:
    - **BYOK tool image**: Contains buildah, the embedding toolchain, and the embedding model. Used by customers to build custom RAG images from their own Markdown content.
+   - [DEPRECATED: **Main RAG content image** — previously contained all OCP version vector indexes, the `latest` symlink, and the embedding model. No longer built; OCP docs are served by OKP.]
 
-4. Three pipeline implementations exist for generating vector indexes:
-   - **lsc library pipeline** (`lsc/Containerfile.konflux` + `lsc/custom_processor.py`): The primary Konflux CI pipeline. Uses the lsc library (`lsc/src/lightspeed_rag_content/`) and produces `llamastack-faiss` indexes. Used by the `lightspeed-ocp-rag-push` and `lightspeed-ocp-rag-pull-request` Tekton pipelines.
-   - **Plaintext pipeline** (`scripts/generate_embeddings.py` + root `Containerfile`): An alternative build variant. Processes pre-converted plaintext OCP docs and Markdown runbooks using plain LlamaIndex FAISS. Used by the `own-app-lightspeed-rag-content` Tekton pipelines.
-   - **HTML pipeline** (`scripts/html_embeddings/`): Downloads HTML documentation from the Red Hat portal, strips non-content markup, performs semantic HTML chunking, and generates embeddings. Not used by any CI pipeline.
+4. Three pipeline implementations exist for generating vector indexes, all deprecated for OCP docs production:
+   - [DEPRECATED] **lsc library pipeline** (`lsc/Containerfile.konflux` + `lsc/custom_processor.py`): Was the primary Konflux CI pipeline. Used the lsc library and produced `llamastack-faiss` indexes. Used by the `lightspeed-ocp-rag-push` and `lightspeed-ocp-rag-pull-request` Tekton pipelines.
+   - [DEPRECATED for OCP docs] **Plaintext pipeline** (`scripts/generate_embeddings.py` + root `Containerfile`): Was an alternative build variant. Processed pre-converted plaintext OCP docs and Markdown runbooks using plain LlamaIndex FAISS. The BYOK path in `generate_embeddings_tool.py` remains active.
+   - [DEPRECATED] **HTML pipeline** (`scripts/html_embeddings/`): Downloaded HTML documentation from the Red Hat portal, stripped non-content markup, performed semantic HTML chunking, and generated embeddings. Was never used by any CI pipeline.
 
 5. The embedding model must be redistributable under an Apache 2.0 compatible license.
 
@@ -23,23 +25,28 @@ OpenShift LightSpeed RAG Content is a build-time artifact producer for the OpenS
 
 ## Integration Contract
 
-### Consumed by lightspeed-service
+### BYOK tool image
 
-The main RAG content image is mounted as a volume by lightspeed-service (typically via the OpenShift LightSpeed operator). The service reads:
+The BYOK tool image is used by customers to build custom RAG container images from their own Markdown content. The tool image contains buildah, the embedding toolchain, and the embedding model. Customers mount their Markdown at `/markdown` and the tool produces a RAG image archive at `/output/`.
 
-- `/rag/vector_db/ocp_product_docs/{version}/` -- persisted FAISS vector store files (`docstore.json`, `index_store.json`, `graph_store.json`, `vector_store.json`, `metadata.json`).
+The resulting BYOK RAG images are consumed by lightspeed-service via init containers configured through the operator CRD's `rag[]` entries. Each BYOK index is mounted and registered as a `reference_content` entry.
+
+### DEPRECATED: Main RAG content image
+
+> The main RAG content image is deprecated. OCP product documentation is now served by OKP via the RHOKP sidecar deployed by the operator. The mount paths and integration described below are no longer applicable to new deployments.
+
+Previously, the main RAG content image was mounted as a volume by lightspeed-service. The service read:
+- `/rag/vector_db/ocp_product_docs/{version}/` -- persisted FAISS vector store files.
 - `/rag/vector_db/ocp_product_docs/latest` -- symlink to the highest OCP version directory.
-- `/rag/embeddings_model/` -- the HuggingFace-compatible sentence-transformer model used to embed user queries at runtime.
-
-The service loads these indexes read-only at startup via LlamaIndex's `StorageContext.from_defaults()` and uses the same embedding model to encode queries for vector similarity search.
+- `/rag/embeddings_model/` -- the sentence-transformer model used to embed user queries at runtime.
 
 ### Integration invariant
 
-The embedding model used to generate the indexes must be identical to the model used by lightspeed-service for query embedding. A mismatch produces meaningless similarity scores. The model identity is currently enforced by shipping the model inside the RAG content image and configuring the service to use it via `ols_config.reference_content.embeddings_model_path`.
+The embedding model used to generate BYOK indexes must be identical to the model used by lightspeed-service for BYOK query embedding. A mismatch produces meaningless similarity scores. The model identity is enforced by shipping the model inside the BYOK tool image and configuring the service to use it via `ols_config.reference_content.embeddings_model_path`.
 
 ### Operator integration
 
-The OpenShift LightSpeed operator configures RAG content references via the CRD. Each index entry specifies `product_docs_index_path`, `product_docs_index_id`, and `product_docs_origin`. The operator mounts the RAG content image and maps these paths. [PLANNED: OLS-1812 -- per-index embedding model path in CRD]
+The OpenShift LightSpeed operator configures BYOK RAG content references via the CRD. Each BYOK index entry specifies `product_docs_index_path`, `product_docs_index_id`, and `product_docs_origin`. The operator mounts BYOK RAG images via init containers and maps these paths.
 
 ## Constraints
 
@@ -51,9 +58,5 @@ The OpenShift LightSpeed operator configures RAG content references via the CRD.
 
 ## Planned Changes
 
-- [PLANNED: OLS-2294] Add metadata generation stage to the pipeline.
-- [PLANNED: OLS-1729] Embedding model fine-tuning -- use fine-tuned models for better domain-specific retrieval accuracy.
-- [PLANNED: OLS-2903] OKP-based RAG -- propose plans to use OKP (OpenShift Knowledge Platform) content with OLS.
-- [PLANNED: OLS-2704] RAG as a service / MCP -- externalize RAG retrieval behind an MCP interface.
-- [PLANNED: OCPSTRAT-1495] Include OCP KCS (Knowledge-Centered Service) content in OLS.
-- [PLANNED: OCPSTRAT-1492] Include OCP layered product knowledge (CNV, ACM, RHOSO) in OLS.
+- [PLANNED: OLS-2704] RAG as a service / MCP -- externalize RAG retrieval behind an MCP interface. Relevant to BYOK.
+- [PLANNED: OLS-1872] BYOK Phase 2 -- one-click import from Git/Confluence.
