@@ -4,6 +4,21 @@
 
 All specifications live in `.ai/spec/`. Start with `.ai/spec/README.md` for project overview, reading order, and structure guide.
 
+## Commands
+
+```bash
+make build-image       # Build the RAG content container image
+make verify            # Lint + type checks
+make -C lsc test-unit  # Run unit tests (lsc library)
+make -C lsc verify     # Full lint suite (lsc library)
+make format            # Format code
+```
+
+## Conventions
+
+- Python codebase — follow the same style as lightspeed-service (Ruff, Black)
+- Two build targets: root Makefile for the main RAG content image, `lsc/` for the BYOK tool library
+
 ## Git and PR Workflow
 
 ### Commit Messages
@@ -30,6 +45,3 @@ When finishing a development branch:
 3. Push to the contributor's fork remote (not `origin`)
 4. Create the PR against `origin/main` using `--head <user>:<branch>`
 
-## Risk Levels
-
-Risk levels are enforced via a PreToolUse hook before every Jira create/edit call. The rubric and classification examples live in [lightspeed-team-harness/hooks/risk-rubric.md](https://github.com/openshift/lightspeed-team-harness/blob/main/hooks/risk-rubric.md).
