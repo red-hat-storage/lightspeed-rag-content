@@ -74,7 +74,7 @@ create-rag: ## Creates vector db based on cached downloads
 	--output-dir vector_db \
 	--index vector_db_index \
 	--skip-runbooks \
-	--skip-recipes \
+	--recipes-dir odf/dr/recipes/markdown \
 	--use-cached-downloads \
 	--cache-dir odf/ \
 	--verbose
