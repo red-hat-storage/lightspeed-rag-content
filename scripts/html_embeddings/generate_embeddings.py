@@ -28,6 +28,7 @@ from download_docs import download_documentation
 from strip_html import strip_html_content
 from chunk_html import chunk_html_documents
 from process_runbooks import process_runbooks
+from process_recipes import process_recipes
 from utils import setup_logging, create_directory_structure, validate_dependencies
 
 import faiss
@@ -95,6 +96,9 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--skip-runbooks", action="store_true", help="Skip runbooks processing"
+    )
+    parser.add_argument(
+        "--skip-recipes", action="store_true", help="Skip recipes processing"
     )
     parser.add_argument(
         "--cache-dir", default="./cache", help="Directory for intermediate files"
@@ -169,6 +173,12 @@ def parse_arguments() -> argparse.Namespace:
         "-r",
         default="./runbooks",
         help="Directory containing runbooks",
+    )
+
+    parser.add_argument(
+        "--recipes-dir",
+        default="./recipes",
+        help="Directory containing recipes",
     )
 
     parser.add_argument("--model-name", "-mn", help="HF repo id of the embedding model")
@@ -363,6 +373,37 @@ def run_runbooks_step(args: argparse.Namespace, paths: dict[str, Path], logger) 
             return False
     except Exception as e:
         logger.error("Runbooks step failed: %s", e)
+        return False
+
+
+def run_recipes_step(args: argparse.Namespace, paths: dict[str, Path], logger) -> bool:
+    """Run the recipes processing step."""
+    if args.skip_recipes:
+        logger.info("Skipping recipes processing")
+        return True
+
+    recipes_dir = Path(args.recipes_dir)
+    if not recipes_dir.exists():
+        logger.warning("Recipes directory %s does not exist, skipping", recipes_dir)
+        return True
+
+    chunks_dir = paths["chunks"]
+
+    try:
+        logger.info("Processing recipes...")
+        success = process_recipes(
+            recipes_dir=recipes_dir,
+            output_dir=chunks_dir,
+            max_token_limit=args.max_token_limit,
+        )
+        if success:
+            logger.info("Recipes processing completed successfully")
+            return True
+        else:
+            logger.error("Recipes processing failed")
+            return False
+    except Exception as e:
+        logger.error("Recipes step failed: %s", e)
         return False
 
 
@@ -610,6 +651,7 @@ def main() -> int:
                 ("strip", run_strip_step),
                 ("chunk", run_chunk_step),
                 ("runbooks", run_runbooks_step),
+                ("recipes", run_recipes_step),
                 ("embed", run_embedding_step),
             ]
 
