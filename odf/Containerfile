@@ -11,9 +11,9 @@ WORKDIR /workdir
 COPY --parents scripts/doc_downloader scripts/html_chunking scripts/html_embeddings ./
 COPY odf/Makefile odf/
 COPY --parents odf/${DOC_SLUG} ./
-# On a 8 core vCPU with AVX2 this command took 1hr45min
+COPY --parents odf/dr ./
+# On a 8 core vCPU with AVX512 this command took 45min
 RUN make -C odf create-rag
-COPY --parents vector_db ./
 
 # STAGE 2: Copy the embedded rag folder from STAGE 1
 FROM ${UBI_BASE_IMAGE}

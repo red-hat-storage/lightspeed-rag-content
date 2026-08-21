@@ -68,12 +68,13 @@ create-rag: ## Creates vector db based on cached downloads
 		@find odf/${DOC_SLUG}/${DOC_VERSION}/stripped -empty -type d -delete
 	fi
 
-	@python3.11 scripts/html_embeddings/generate_embeddings.py \
+	@python3.12 scripts/html_embeddings/generate_embeddings.py \
 	--doc-url-version ${DOC_VERSION} \
 	--doc-url-slug ${DOC_SLUG} \
 	--output-dir vector_db \
 	--index vector_db_index \
 	--skip-runbooks \
+	--recipes-dir odf/dr/recipes/markdown \
 	--use-cached-downloads \
 	--cache-dir odf/ \
 	--verbose
@@ -83,4 +84,12 @@ create-rag: ## Creates vector db based on cached downloads
 build-odf-rag: ## Builds a container with ODF RAG content
 	@pushd ..
 	@${IMAGE_CMD} build -f odf/Containerfile -t ${IMAGE_WITH_TAG} .
+	@popd
+
+.PHONY: build-odf-rag-sub
+build-odf-rag-sub: ## Builds a container with ODF RAG content with RH Subscription
+	@pushd ..
+	@${IMAGE_CMD} build -f odf/Containerfile -t ${IMAGE_WITH_TAG} \
+		-v ${PWD}/odf/entitlement:/etc/pki/entitlement:Z \
+		-v ${PWD}/odf/rhsm:/etc/rhsm:Z .
 	@popd
