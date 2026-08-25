@@ -7,7 +7,7 @@ MAKEFLAGS += --no-builtin-rules
 MAKEFLAGS += --no-print-directory
 
 DOC_SLUG ?= "red_hat_openshift_data_foundation"
-DOC_VERSION ?= "4.21"
+DOC_VERSION ?= "4.22"
 IMAGE_CMD ?= "podman"
 IMAGE_WITH_TAG ?= "odf-ols-byok:latest"
 
@@ -27,8 +27,8 @@ help: ## Display this help.
 
 .PHONY: setup-env
 setup-env: ## Installs python environment and required python packages into a virtual env
-	@uv python install 3.11
-	@uv venv --python 3.11
+	@uv python install 3.12
+	@uv venv --python 3.12
 	@uv pip install -r ../requirements.cpu.txt
 
 .PHONY: download-docs
@@ -37,7 +37,7 @@ download-docs: ## Downloads ODF docs into 'odf' folder corresponding to the vers
 
 	@mkdir -p odf/${DOC_SLUG}/${DOC_VERSION}/downloads/
 
-	@python3.11 scripts/doc_downloader/downloader.py \
+	@python3.12 scripts/doc_downloader/downloader.py \
 	--doc-url "https://docs.redhat.com/en/documentation/${DOC_SLUG}/${DOC_VERSION}/" \
 	--output-dir odf/${DOC_SLUG}/${DOC_VERSION}/downloads/ \
 	--max-retries 1
