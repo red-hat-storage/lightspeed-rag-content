@@ -1,6 +1,3 @@
-odf/**/chunks
-odf/**/stripped
-odf/**/*.sqlite
 .venv
 __pycache__
 embeddings_model/model.safetensors
