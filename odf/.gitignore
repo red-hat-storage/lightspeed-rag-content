@@ -1,2 +1,5 @@
 /entitlement
 /rhsm
+**/chunks
+**/stripped
+**/*.sqlite
