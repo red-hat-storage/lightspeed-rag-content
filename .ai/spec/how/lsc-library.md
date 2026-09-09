@@ -1,6 +1,6 @@
-# lsc Library -- Architecture
+# [REMOVED] lsc Library -- Historical Architecture
 
-This spec documents the `lsc/src/lightspeed_rag_content/` installable Python library -- the most recent and most capable pipeline implementation, supporting multiple vector store backends (FAISS, PostgreSQL, llama-stack faiss, llama-stack sqlite-vec).
+The `lsc/` installable Python library and its pipeline were removed. This document is retained only as historical context for the former FAISS, PostgreSQL, and llama-stack vector-store implementations; none of the paths or symbols below exist in the current repository.
 
 ## Module Map
 

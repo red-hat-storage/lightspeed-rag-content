@@ -72,7 +72,7 @@ This spec defines the rules for acquiring, processing, and organizing input cont
 
 - `config/exclude.conf` -- [DEPRECATED] newline-delimited list of relative file paths to exclude from OCP docs after conversion.
 - `ocp-product-docs-plaintext/{version}/` directories -- [DEPRECATED] each directory name is an OCP version string. Adding or removing directories changes which versions are indexed.
-- `scripts/asciidoctor-text/{version}/attributes.yaml` (and `lsc/scripts/asciidoctor-text/{version}/attributes.yaml`) -- [DEPRECATED] per-version AsciiDoc attribute files providing version-specific substitution values.
+- `scripts/asciidoctor-text/{version}/attributes.yaml` -- [DEPRECATED] per-version AsciiDoc attribute files providing version-specific substitution values.
 - `--hermetic-build` / `-hb` CLI flag -- disables URL reachability validation.
 - `--folder` / `-f` CLI flag -- specifies the input document directory.
 - `--runbooks` / `-r` CLI flag -- [DEPRECATED] specifies the runbooks directory.
