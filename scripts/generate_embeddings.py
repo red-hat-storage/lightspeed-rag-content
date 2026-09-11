@@ -236,7 +236,9 @@ if __name__ == "__main__":
     metadata["overlap"] = args.overlap
     metadata["total-embedded-files"] = len(documents)
 
-    with open(os.path.join(PERSIST_FOLDER, "metadata.json"), "w", encoding="utf-8") as file:
+    with open(
+        os.path.join(PERSIST_FOLDER, "metadata.json"), "w", encoding="utf-8"
+    ) as file:
         file.write(json.dumps(metadata))
 
     if UNREACHABLE_DOCS > 0:

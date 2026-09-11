@@ -4,19 +4,17 @@ import argparse
 import json
 import os
 import time
-from typing import Callable, Dict
+from typing import Dict
 
 import faiss
 import frontmatter
-import requests
 from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
 from llama_index.core.llms.utils import resolve_llm
-
-from llama_index.core.schema import TextNode
 from llama_index.core.storage.storage_context import StorageContext
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.readers.file.flat.base import FlatReader
 from llama_index.vector_stores.faiss import FaissVectorStore
+
 
 def file_metadata_func(file_path: str) -> Dict:
     """Populate the docs_url and title metadata elements with docs URL and the page's title.
@@ -35,8 +33,8 @@ def file_metadata_func(file_path: str) -> Dict:
             elif first_line.startswith("---"):
                 file.close()
                 post = frontmatter.load(file_path)
-                title = post['title']
-                docs_url = post['url']
+                title = post["title"]
+                docs_url = post["url"]
     except Exception:  # noqa: S110
         pass
     msg = f"file_path: {file_path}, title: {title}, docs_url: {docs_url}"
@@ -49,7 +47,9 @@ if __name__ == "__main__":
     start_time = time.time()
 
     parser = argparse.ArgumentParser(description="Embedding CLI")
-    parser.add_argument("-i", "--input-dir", help="Input directory with the markdown content")
+    parser.add_argument(
+        "-i", "--input-dir", help="Input directory with the markdown content"
+    )
     parser.add_argument(
         "-emd",
         "--embedding-model-dir",
@@ -65,7 +65,11 @@ if __name__ == "__main__":
         "-cs", "--chunk-size", type=int, default=380, help="Chunk size for embedding"
     )
     parser.add_argument(
-        "-co", "--chunk-overlap", type=int, default=0, help="Chunk overlap for embedding"
+        "-co",
+        "--chunk-overlap",
+        type=int,
+        default=0,
+        help="Chunk overlap for embedding",
     )
     parser.add_argument("-o", "--output-dir", help="Vector DB output directory")
     parser.add_argument("-id", "--index-id", help="Product index ID")
@@ -99,7 +103,7 @@ if __name__ == "__main__":
         recursive=True,
         required_exts=[".md"],
         file_extractor={".md": FlatReader()},
-        file_metadata=file_metadata_func
+        file_metadata=file_metadata_func,
     ).load_data()
 
     # Create chunks/nodes
