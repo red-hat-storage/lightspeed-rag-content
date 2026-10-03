@@ -2,6 +2,9 @@
 #    uv pip compile requirements.source.cpu.txt --refresh --generate-hashes --python-version 3.12 --python-platform x86_64-unknown-linux-gnu --emit-index-url --no-deps --no-annotate
 --index-url https://pypi.org/simple
 
+anyio==4.15.1 \
+    --hash=sha256:6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101 \
+    --hash=sha256:9f28306018cbd6d329e64a36d58256edff76dd996fe423bc957326e578b82a94
 llama-index-embeddings-huggingface==0.8.0 \
     --hash=sha256:02f34df13e3b83e9169fcfdf624b6fbe906fce75b7448cdf69800babc281a9a6 \
     --hash=sha256:aca52e036371a86b0135f239d15916fbe2a5d66aa4267242bee1f2bef2da74c1
@@ -98,6 +101,9 @@ markupsafe==3.0.3 \
     --hash=sha256:f71a396b3bf33ecaa1626c255855702aca4d3d9fea5e051b41ac59a9c1c41edc \
     --hash=sha256:f9e130248f4462aaa8e2552d547f36ddadbeaa573879158d721bbd33dfe4743a \
     --hash=sha256:fed51ac40f757d41b7c48425901843666a6677e3e8eb0abcff09e4ba6e664f50
+pypdf==6.19.0 \
+    --hash=sha256:7e5d6e730e7dae87d560a2cee218b852f6498c8be61966f3cd02ead971e48d14 \
+    --hash=sha256:bbc43aca292369ccc6cbc8a921991ecf2538a3587ab5a116eff06c321d647155
 packaging==26.2 \
     --hash=sha256:5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e \
     --hash=sha256:ff452ff5a3e828ce110190feff1178bb1f2ea2281fa2075aadb987c2fb221661
