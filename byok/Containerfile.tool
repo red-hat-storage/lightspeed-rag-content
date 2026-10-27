@@ -9,14 +9,15 @@ ARG BYOK_TOOL_IMAGE
 ARG UBI_BASE_IMAGE
 ARG HERMETIC
 USER 0
-RUN dnf install -y buildah python3.12-pip && dnf update -y --nodocs && dnf clean all
+RUN dnf install -y buildah python3.12-pip zlib-devel libjpeg-turbo-devel && dnf update -y --nodocs && dnf clean all
 
 WORKDIR /workdir
 
-# Same CPU lockfiles as the lightspeed-rag-tool image (repo root; see scripts/konflux_requirements.sh)
+# CPU lockfiles from the repo root; regenerate with make bump.
 COPY \
     requirements.hashes.wheel.txt \
     requirements.hashes.source.txt \
+    requirements.hashes.wheel.pypi.txt \
     requirements-build.txt \
     requirements.hermetic.txt \
     pyproject.toml \
@@ -32,7 +33,8 @@ RUN python3.12 -m pip install --upgrade pip && \
         python3.12 -m pip install --no-cache-dir --no-deps --ignore-installed \
             --no-index --find-links "${PIP_FIND_LINKS}" \
             -r requirements.hashes.wheel.txt \
-            -r requirements.hashes.source.txt; \
+            -r requirements.hashes.source.txt \
+            -r requirements.hashes.wheel.pypi.txt; \
     else \
         python3.12 -m pip install --no-cache-dir -e ".[cpu]"; \
     fi
