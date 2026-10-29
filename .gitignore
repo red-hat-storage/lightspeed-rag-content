@@ -1,0 +1,33 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+downloader
+
+# Test binary
+*.test
+
+# Go coverage & profiling
+*.out
+*.prof
+coverage.html
+
+# Dependency directories
+vendor/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Pipeline stage outputs
+downloads/
+parsed/
