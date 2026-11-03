@@ -1,9 +1,10 @@
 VERSION ?= 4.22
-BINARY  := downloader
+BINARY  := bin/odf-rag
 
 .PHONY: build download parse test clean all
 
 build:
+	mkdir -p bin
 	go build -buildvcs=false -o $(BINARY) ./cmd
 
 download: build
@@ -16,7 +17,7 @@ test:
 	go test ./...
 
 clean:
-	rm -f $(BINARY)
+	rm -rf bin/
 	rm -rf parsed/
 
 all: download parse

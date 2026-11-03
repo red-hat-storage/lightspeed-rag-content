@@ -1,33 +1,19 @@
-# Binaries
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-downloader
+# Compiled binary output
+/bin/
 
-# Test binary
+# Go test binaries and coverage output
 *.test
-
-# Go coverage & profiling
-*.out
-*.prof
+coverage.out
 coverage.html
 
-# Dependency directories
-vendor/
+# Environment and local configuration
+.env
+.env.*
 
-# IDE / editor
+# IDE and editor files
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
 
-# OS files
+# Operating system files
 .DS_Store
 Thumbs.db
-
-# Pipeline stage outputs
-downloads/
-parsed/

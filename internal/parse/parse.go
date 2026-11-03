@@ -35,14 +35,24 @@ func ParsePDFBytes(pdfBytes []byte) (string, error) {
 
 // metadata returns YAML front matter for a parsed document.
 func metadata(name, version string) string {
-	return fmt.Sprintf(`---
-source_file: %s.pdf
+    documentURL := fmt.Sprintf(
+        "%s/%s/html-single/%s",
+        docsBaseURL,
+        version,
+        name,
+    )
+
+    title := strings.ReplaceAll(name, "_", " ")
+
+    return fmt.Sprintf(`---
+title: "%s"
+url: "%s"
+source_file: "%s.pdf"
 version: "%s"
-chapter: %s
-source_url: %s/%s/pdf/%s/%s.pdf
+chapter: "%s"
 ---
 
-`, name, version, name, docsBaseURL, version, name, name)
+`, title, documentURL, name, version, name)
 }
 
 // Run parses all PDFs in downloads/<version>/ and writes
