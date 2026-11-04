@@ -1,0 +1,19 @@
+# Compiled binary output
+/bin/
+
+# Go test binaries and coverage output
+*.test
+coverage.out
+coverage.html
+
+# Environment and local configuration
+.env
+.env.*
+
+# IDE and editor files
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
