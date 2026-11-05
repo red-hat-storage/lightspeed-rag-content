@@ -1,0 +1,23 @@
+name: Generate RAG Image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate-rag-image:
+    name: Generate RAG Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build the RAG image
+        run: |
+          docker build -f Containerfile \
+            --build-arg DOC_VERSION=4.22 \
+            --build-arg VECTOR_DB_INDEX=odf_4_22 \
+            -t odf-ols-byok:latest .
