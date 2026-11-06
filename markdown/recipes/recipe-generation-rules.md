@@ -1,3 +1,8 @@
+---
+title: "ODF Disaster Recovery — Recipe Generation Rules"
+url: "https://github.com/red-hat-storage/lightspeed-rag-content/blob/main/markdown/recipes/recipe-generation-rules.md"
+---
+
 # ODF Disaster Recovery — Recipe Generation Rules
 
 ## Purpose

@@ -1,3 +1,8 @@
+---
+title: "Recipe API Reference"
+url: "https://github.com/red-hat-storage/lightspeed-rag-content/blob/main/markdown/recipes/recipe-api-reference.md"
+---
+
 # Recipe API Reference
 
 ## Minimal Valid Recipe

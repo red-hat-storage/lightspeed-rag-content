@@ -1,3 +1,8 @@
+---
+title: "ODF Disaster Recovery — Recipe Examples"
+url: "https://github.com/red-hat-storage/lightspeed-rag-content/blob/main/markdown/recipes/recipe-examples.md"
+---
+
 # ODF Disaster Recovery — Recipe Examples
 
 ## Purpose

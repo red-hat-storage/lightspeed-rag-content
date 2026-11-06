@@ -1,3 +1,8 @@
+---
+title: "ODF Disaster Recovery — Recipe Authoring Guide"
+url: "https://github.com/red-hat-storage/lightspeed-rag-content/blob/main/markdown/recipes/recipe-authoring-guide.md"
+---
+
 # ODF Disaster Recovery — Recipe Authoring Guide
 
 ## Overview

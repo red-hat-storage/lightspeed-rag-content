@@ -10,7 +10,7 @@ ARG DOC_VERSION
 USER 0
 WORKDIR /workdir
 COPY parsed/${DOC_VERSION}/ /markdown/
-COPY odf/dr/recipes/markdown/ /markdown/recipes/
+COPY markdown/recipes/ /markdown/recipes/
 RUN python3.12 generate_embeddings_tool.py \
     -i /markdown \
     -emd embeddings_model \
