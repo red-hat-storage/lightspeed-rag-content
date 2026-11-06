@@ -3,6 +3,10 @@ name: Generate RAG Image
 on:
   workflow_dispatch:
 
+concurrency:
+  group: generate-rag-image
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -19,5 +23,4 @@ jobs:
         run: |
           docker build -f Containerfile \
             --build-arg DOC_VERSION=4.22 \
-            --build-arg VECTOR_DB_INDEX=odf_4_22 \
             -t odf-ols-byok:latest .
