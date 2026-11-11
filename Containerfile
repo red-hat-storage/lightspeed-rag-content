@@ -15,7 +15,8 @@ RUN python3.12 generate_embeddings_tool.py \
     -i /markdown \
     -emd embeddings_model \
     -emn sentence-transformers/all-mpnet-base-v2 \
-    -o vector_db
+    -o vector_db \
+    -id vector_db_index
 
 # STAGE 2: Ship only the vector database.
 FROM ${UBI_BASE_IMAGE}
