@@ -1,0 +1,8 @@
+What should I consider before deploying OpenShift Data Foundation?|planning_your_deployment
+How do I deploy OpenShift Data Foundation on VMware vSphere?|vmware_vsphere
+How do I replace a failed storage device?|replacing_devices
+How do I add storage capacity to an OpenShift Data Foundation cluster?|scaling_storage
+What is new in OpenShift Data Foundation 4.22?|4.22_release_notes
+What is an ODF disaster recovery Recipe?|recipe-overview
+What questions should be answered before designing a Recipe?|recipe-authoring-guide
+What fields does a Recipe use?|recipe-api-reference

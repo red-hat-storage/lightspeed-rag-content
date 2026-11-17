@@ -1,0 +1,80 @@
+name: Check retrieval
+
+on:
+  workflow_dispatch:
+    inputs:
+      doc_version:
+        description: ODF docs version
+        default: "4.22"
+
+permissions:
+  contents: read
+
+env:
+  DOC_VERSION: ${{ inputs.doc_version || '4.22' }}
+  TOOL_IMAGE: quay.io/redhat-user-workloads/crt-nshift-lightspeed-tenant/lightspeed-rag-tool:latest  # pin a @sha256 digest here
+
+jobs:
+  check-retrieval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash   # enables pipefail
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the RAG image
+        run: |
+          docker build -f Containerfile \
+            --build-arg DOC_VERSION="$DOC_VERSION" \
+            -t odf-ols-byok:latest .
+
+      - name: Copy the database out
+        run: |
+          docker create --name odf-rag odf-ols-byok:latest
+          mkdir -p vector_db
+          docker cp odf-rag:/rag/vector_db/. vector_db
+          docker rm odf-rag
+          python3 -m json.tool vector_db/metadata.json
+          python3 -c 'import json; assert json.load(open("vector_db/metadata.json"))["index-id"]=="vector_db_index"'
+
+      - name: Run the questions
+        run: |
+          while IFS='|' read -r question expected || [ -n "$question" ]; do
+            [ -z "$question" ] && continue
+            echo "===== $question"
+            echo "look for: $expected"
+            result=$(docker run --rm --entrypoint python3.12 \
+              -v "$PWD/vector_db:/vector_db" \
+              -v "$PWD/tests/query_rag.py:/query_rag.py" \
+              "$TOOL_IMAGE" \
+              /query_rag.py \
+                -p /vector_db \
+                -x vector_db_index \
+                -m /workdir/embeddings_model \
+                -k 3 \
+                --json \
+                -q "$question")
+            echo "$result"
+            if echo "$result" | grep -qiF -- "$expected"; then
+              echo "RESULT: PASS"
+            else
+              echo "RESULT: FAIL ($expected not in top 3)"
+            fi
+          done < tests/questions.txt > retrieval-results.txt
+
+          cat retrieval-results.txt
+          echo "---- summary ----"
+          grep -c '^RESULT: PASS' retrieval-results.txt || true
+          if grep -q '^RESULT: FAIL' retrieval-results.txt; then
+            echo "Some questions did not retrieve the expected page"
+            exit 1
+          fi
+
+      - name: Save the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-results
+          path: retrieval-results.txt
